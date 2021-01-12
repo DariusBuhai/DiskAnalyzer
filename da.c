@@ -20,7 +20,7 @@ int main(int argc, char **argv){
         return 0;
 
     // Add
-    if(is_option(argv[1], "-a", "--a")){
+    if(is_option(argv[1], "-a", "--add")){
         if(argc<3)
             return -1;
         int priority = 1;
@@ -81,7 +81,6 @@ int main(int argc, char **argv){
         //int taskId = atoi(argv[2]);
         printf("Path  Usage  Size  Amount\n");
     }
-
 
     return 0;
 }
