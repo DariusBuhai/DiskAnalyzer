@@ -7,7 +7,7 @@
 #include <syslog.h>
 
 #include "run_daemon.h"
-#include "shared.h"
+#include "Shared/shared.h"
 
 static void skeleton_daemon(){
     pid_t pid;

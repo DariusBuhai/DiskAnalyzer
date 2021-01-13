@@ -1,7 +1,0 @@
-#ifndef DISKANALYZER_SHARED_H
-#define DISKANALYZER_SHARED_H
-
-    #define DEBUG 1
-
-
-#endif DISKANALYZER_SHARED_H
