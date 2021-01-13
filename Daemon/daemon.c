@@ -5,9 +5,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
-   
-static void skeleton_daemon()
-{
+
+#include "run_daemon.h"
+#include "shared.h"
+
+static void skeleton_daemon(){
     pid_t pid;
     
     /* Fork off the parent process */
@@ -59,20 +61,15 @@ static void skeleton_daemon()
     openlog ("firstdaemon", LOG_PID, LOG_DAEMON);
 }
 
-int main()
-{
+int main(){
+
+    #if !DEBUG
     skeleton_daemon();
+    #endif
 
-    while (1)
-    {
-        //TODO: Insert daemon code here.
-        syslog (LOG_NOTICE, "First daemon started.");
-        sleep (20);
-        break;
-    }
-
-    syslog (LOG_NOTICE, "First daemon terminated.");
-    closelog();
+    int error = run_daemon();
+    if(error)
+        printf("Failed to start daemon, error code: %d\n", error);
 
     return EXIT_SUCCESS;
 }
