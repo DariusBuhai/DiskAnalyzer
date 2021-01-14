@@ -1,86 +1,87 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "manage_processes.h"
+#include "manage_memory.h"
 #include "Shared/shared.h"
-#include "Worker/storage.h"
-
-struct process_details* active_processes;
-int no_of_processes = 0;
-
-void initialize_processes(){
-    active_processes = malloc(sizeof(struct process_details)*ALLOWED_PROCESSES);
-    no_of_processes = 0;
-}
+#include "Worker/analyzer.h"
 
 void check_processes(){
+    int process_counter = *get_process_counter();
     /// Update processes
-    for(int i=0;i<no_of_processes;++i){
+    for(int i=0;i<process_counter;++i){
         int status;
-        pid_t return_pid = waitpid(active_processes[i].pid, &status, WNOHANG);
+        pid_t return_pid = waitpid(get_process_details(i)->pid, &status, WNOHANG);
         if(return_pid==-1){
-            /// error here
+            perror(NULL);
+            printf("Process error: %d\n", errno);
         }else if(return_pid==0){
             /// still running
-        }else if(return_pid==active_processes[i].pid){
-            active_processes[i].status = DONE;
+        }else if(return_pid==get_process_details(i)->pid){
+            get_process_details(i)->status = DONE;
         }
     }
+    if(process_counter>0){
+        struct process_details* current = get_process_details(process_counter-1);
+        if(current->status!=DONE)
+            printf("Analysing path: %s. Found %d files, Done: %d.\n",current->path, current->total_tasks, current->done_tasks);
+    }
+
     /// Get highest priority at the moment
     int highest_priority = LOW;
-    for(int i=0;i<no_of_processes;++i)
-        if(active_processes->status==RUNNING && active_processes[i].priority>highest_priority)
-            highest_priority = active_processes[i].priority;
-    for(int i=0;i<no_of_processes;++i)
-        if(active_processes[i].priority<highest_priority && active_processes[i].status==RUNNING){
-            active_processes[i].status = PAUSED;
-            kill(active_processes[i].pid, SIGSTOP);
+    for(int i=0;i<process_counter;++i)
+        if(get_process_details(i)->status==RUNNING && get_process_details(i)->priority>highest_priority)
+            highest_priority = get_process_details(i)->priority;
+    for(int i=0;i<process_counter;++i)
+        if(get_process_details(i)->priority<highest_priority && get_process_details(i)->status==RUNNING){
+            get_process_details(i)->status = PAUSED;
+            kill(get_process_details(i)->pid, SIGSTOP);
         }
-        else if(active_processes[i].status==PAUSED)
-            kill(active_processes[i].pid, SIGCONT);
-
+        else if(get_process_details(i)->status==PAUSED)
+            kill(get_process_details(i)->pid, SIGCONT);
 }
 
-int process_requests(char* request){
-    int signal_type = 1;
-    if(signal_type==1){
-        char *file = "/Users/dariusbuhai/Desktop/Programs";
+int process_signal(struct signal_details signal){
+    if(signal.type==ADD){
         pid_t pid = fork();
         if(pid<0)
             return errno;
         if(pid==0){
             /// Manage child process
-            active_processes[no_of_processes++].pid = getpid();
-            active_processes->priority = LOW;
-            printf("Process with id: %d has just started\n", getpid());
-            getpid();
-            analyze_dir(file);
+            struct process_details* process = get_process_details((*get_process_counter())++);
+
+            process->pid = getpid();
+            process->priority = signal.priority;
+            process->path = signal.path;
+
+            printf("Process with id: %d has just started\n", process->pid);
+
+            analyze_dir(signal.path, process);
         }
     }
-    struct process_details process_id;
-    /// Cannot yet determine the process_id, create a random one
-    if(DEBUG && no_of_processes>0)
-        process_id = active_processes[no_of_processes-1];
     /// Pause process id
-    if(signal_type==2){
-        process_id.status = FORCE_PAUSED;
-        kill(process_id.pid, SIGSTOP);
+    if(signal.type==PAUSE){
+        /// Determine the process running with that pid somehow
+        //process.status = FORCE_PAUSED;
+        kill(signal.pid, SIGSTOP);
     }
     /// Continue process with id
-    if(signal_type==2){
-        process_id.status = RUNNING;
-        kill(process_id.pid, SIGCONT);
+    if(signal.type==RESUME){
+        /// Determine the process running with that pid somehow
+        //process.status = RUNNING;
+        kill(signal.pid, SIGCONT);
     }
     /// Kill process
-    if(signal_type==2){
-        process_id.status = KILLED;
-        kill(process_id.pid, SIGTERM);
+    if(signal.type==KILL){
+        /// Determine the process running with that pid somehow
+        //process.status = KILLED;
+        kill(signal.pid, SIGTERM);
     }
 
-    /// Important! Check all processes priorities
+    /// Important! Check processes
     check_processes();
     return 0;
 }

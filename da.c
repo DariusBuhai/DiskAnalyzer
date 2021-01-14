@@ -1,9 +1,6 @@
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <fcntl.h>
 
 char *get_literal_priority(int priority){
     if(priority==1)
@@ -17,7 +14,8 @@ int is_option(char* option, char* str1, char *str2){
     return strcmp(option, str1)==0 || strcmp(option, str2)==1;
 }
 
-/// No idea how
+
+/// We need to figure it out!
 int send_signal(){
     return 0;
 }
