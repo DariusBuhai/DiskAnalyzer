@@ -114,9 +114,7 @@ int main(int argc, char **argv){
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", SUSPEND, pid, getpid());
         send_daemon_instruction(instructions);
-        /// Receive signal
-        /// Print result
-        printf("Task with ID `%d` suspended.\n", pid);
+        sleep(2);
     }
     /// Resume
     if(is_option(argv[1], "-R", "--resume")){
@@ -127,43 +125,33 @@ int main(int argc, char **argv){
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", RESUME, pid, getpid());
         send_daemon_instruction(instructions);
-        /// Receive signal
-        /// Print result
-        printf("Task with ID `%d` resumed.\n", pid);
+        sleep(2);
     }
     /// Kill
     if(is_option(argv[1], "-r", "--remove")){
         if(argc<3)
             return -1;
         int pid = atoi(argv[2]);
-        char* status = "done", *path = "/home/user";
         /// Send signal instruction
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", KILL, pid, getpid());
         send_daemon_instruction(instructions);
-        /// Receive signal
-        /// Print result
-        printf("Removed analysis task with ID `%d`, status `%s` for `%s`\n", pid, status, path);
+        sleep(2);
     }
     /// Info
     if(is_option(argv[1], "-i", "--info")){
         if(argc<3)
             return -1;
-        int taskId = atoi(argv[2]);
-        char* status = "done";
-        printf("The analysis of task with ID `%d` has the status `%s`\n", taskId, status);
+
     }
     /// List
     if(is_option(argv[1], "-l", "--list")){
-        //char* status = "done";
-        printf("ID  PRI  Path  Done  Status  Details\n");
+
     }
     /// Analysis report for tasks that are "done"
     if(is_option(argv[1], "-p", "--print")){
         if(argc<3)
             return -1;
-        //int taskId = atoi(argv[2]);
-        printf("Path  Usage  Size  Amount\n");
     }
 
     return 0;

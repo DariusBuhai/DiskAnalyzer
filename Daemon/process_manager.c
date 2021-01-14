@@ -69,26 +69,36 @@ int process_signal(struct signal_details signal){
             analyze_dir(signal.path, process);
         }
     }
-    /// Pause process id
-    if(signal.type==SUSPEND){
-        /// Determine the process running with that pid somehow
-        //process.status = FORCE_PAUSED;
-        kill(signal.pid, SIGSTOP);
-    }
-    /// Continue process with id
-    if(signal.type==RESUME){
-        /// Determine the process running with that pid somehow
-        //process.status = RUNNING;
-        kill(signal.pid, SIGCONT);
-    }
-    /// Kill process
-    if(signal.type==KILL){
-        /// Determine the process running with that pid somehow
-        //process.status = KILLED;
-        kill(signal.pid, SIGTERM);
+
+    if(signal.type==SUSPEND || signal.type==RESUME || signal.type==KILL){
+        /// Determine the process running with that pid
+        struct process_details* process = NULL;
+        for(int i=0;i<*get_process_counter();++i)
+            if(get_process_details(i)->pid==signal.pid)
+                process = get_process_details(i);
+
+        char* output = malloc(sizeof(char)*1024);
+        if(process!=NULL){
+            if(signal.type==SUSPEND){
+                kill(signal.pid, SIGSTOP);
+                process->status = FORCE_PAUSED;
+                sprintf(output, "Task with ID `%d` suspended", signal.pid);
+            }else if(signal.type==RESUME){
+                kill(signal.pid, SIGCONT);
+                process->status = RUNNING;
+                sprintf(output, "Task with ID `%d` resumed", signal.pid);
+            }else{
+                kill(signal.pid, SIGTERM);
+                process->status = KILLED;
+                sprintf(output, "Removed analysis task with ID `%d` for `%s`", signal.pid, process->path);
+            }
+        }else
+            sprintf(output, "Cannot find task with ID `%d`", signal.pid);
+        write_daemon_output(output);
+        send_signal(signal.ppid);
     }
 
-    /// Important! Check processes
+    /// Check processes
     check_processes();
     return 0;
 }
