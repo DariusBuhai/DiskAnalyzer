@@ -4,8 +4,8 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#include "manage_processes.h"
-#include "manage_memory.h"
+#include "process_manager.h"
+#include "memory_manager.h"
 #include "Shared/shared.h"
 #include "Worker/analyzer.h"
 
@@ -26,7 +26,8 @@ void check_processes(){
     /// Example
     if(process_counter>0){
         struct process_details* current = get_process_details(process_counter-1);
-        printf("Analysing path: %s. Found %d files, Done: %d, Perc: %d%%. \n",current->path, current->total_tasks, current->done_tasks, (current->done_tasks/current->total_tasks)*100);
+        if(current->status==RUNNING)
+            printf("Analysing path: %s. Found %d files, Done: %d. \n",current->path, current->total_tasks, current->done_tasks);
     }
 
     /// Get highest priority at the moment
@@ -62,7 +63,7 @@ int process_signal(struct signal_details signal){
         }
     }
     /// Pause process id
-    if(signal.type==PAUSE){
+    if(signal.type==SUSPEND){
         /// Determine the process running with that pid somehow
         //process.status = FORCE_PAUSED;
         kill(signal.pid, SIGSTOP);

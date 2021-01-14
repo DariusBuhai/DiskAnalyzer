@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <syslog.h>
 
-#include "run_daemon.h"
+#include "daemon_flow.h"
 #include "Shared/shared.h"
 
 static void skeleton_daemon(){
