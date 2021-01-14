@@ -53,6 +53,7 @@ struct file_details* calculate_dirs(struct file_details* location, int *done_tas
     struct file_details* current;
     (*done_tasks)++;
     for(int i=0;i<location->childs_counter;++i){
+
         current = location->childs[i];
         current->usage = (double)current->size / (double)location->size;
 
@@ -60,7 +61,7 @@ struct file_details* calculate_dirs(struct file_details* location, int *done_tas
         for(int j=0;j<current->usage*100;++j)
             strcat(af, "#");
         #if DEBUG
-            //printf("%s %.2f %.3LfMB %s\n", current->path, current->usage*100, bytes_to_xb(current->size, 2), af);
+            //printf("%s %.2f%% %.3LfMB %s\n", current->path, current->usage*100, bytes_to_xb(current->size, 2), af);
         #endif
         if(current->is_dir)
             calculate_dirs(current, done_tasks);
