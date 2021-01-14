@@ -7,10 +7,12 @@
     #define DEBUG 1
     #define SHOW_ERRORS 0
     #define ALLOWED_PROCESSES 100
-    #define CHECK_IN_INTERVAL 3 // seconds
+    #define CHECK_IN_INTERVAL 1 // seconds
 
+    /// Standards
+    #define MAX_FILE_PATH_SIZE 2048
+    #define MAX_SUBDIRS 4096
 
-    /// Data types
     #define LL long long
     #define LD long double
 
@@ -25,13 +27,14 @@
     #define KILLED 5
 
     #define ADD 1
-    #define PAUSE 2
+    #define SUSPEND 2
     #define RESUME 3
     #define KILL 4
 
+    /// Data types
     struct signal_details{
         int type, priority;
-        pid_t pid;
+        pid_t pid, ppid;
         char* path;
         void *response;
     };
@@ -49,7 +52,7 @@
         int childs_counter, is_dir;
         double usage;
         LL size;
-        struct file_details *childs[5048];
+        struct file_details *childs[MAX_SUBDIRS];
     };
 
     /// Methods

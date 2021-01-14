@@ -7,7 +7,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#include "manage_memory.h"
+#include "memory_manager.h"
 #include "Shared/shared.h"
 
 static int shm_fd_processes, shm_fd_counter;
