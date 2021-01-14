@@ -12,22 +12,21 @@
 void check_processes(){
     int process_counter = *get_process_counter();
     /// Update processes
-    for(int i=0;i<process_counter;++i){
-        int status;
-        pid_t return_pid = waitpid(get_process_details(i)->pid, &status, WNOHANG);
-        if(return_pid==-1){
-            perror(NULL);
-            printf("Process error: %d\n", errno);
-        }else if(return_pid==0){
-            /// still running
-        }else if(return_pid==get_process_details(i)->pid){
-            get_process_details(i)->status = DONE;
+    for(int i=0;i<process_counter;++i)
+        if(get_process_details(i)->status!=DONE){
+            int status;
+            pid_t return_pid = waitpid(get_process_details(i)->pid, &status, WNOHANG);
+            if(return_pid==-1){
+                perror(NULL);
+                printf("Process error: %d\n", errno);
+            }else if(return_pid==get_process_details(i)->pid)
+                get_process_details(i)->status = DONE;
         }
-    }
+
+    /// Example
     if(process_counter>0){
         struct process_details* current = get_process_details(process_counter-1);
-        if(current->status!=DONE)
-            printf("Analysing path: %s. Found %d files, Done: %d.\n",current->path, current->total_tasks, current->done_tasks);
+        printf("Analysing path: %s. Found %d files, Done: %d, Perc: %d%%. \n",current->path, current->total_tasks, current->done_tasks, (current->done_tasks/current->total_tasks)*100);
     }
 
     /// Get highest priority at the moment

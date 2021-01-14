@@ -10,7 +10,7 @@
 #include "manage_memory.h"
 #include "Shared/shared.h"
 
-int shm_fd_processes, shm_fd_counter;
+static int shm_fd_processes, shm_fd_counter;
 
 int create_shm_memory(char shm_name[], int *shm_fd, int size){
     *shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);

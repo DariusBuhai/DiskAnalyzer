@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
 
 char *get_literal_priority(int priority){
     if(priority==1)
@@ -16,7 +21,32 @@ int is_option(char* option, char* str1, char *str2){
 
 
 /// We need to figure it out!
+void signal_handler(int sig) {
+    char s1[] = "Hello world\n";
+    write(STDOUT_FILENO, s1, sizeof(s1));
+    signal(SIGUSR1, signal_handler);
+}
+
+pid_t get_daemon_pid(){
+    char *file_location = "Temp/daemon.pid";
+    struct stat buffer;
+    if(stat(file_location, &buffer)<0){
+        printf("No pid available!\n");
+        return 0;
+    }
+    FILE* fp = fopen(file_location, "r");
+    char data[buffer.st_size];
+    fscanf(fp, "%s", data);
+    return atoi(data);
+}
+
 int send_signal(){
+    signal(SIGUSR1, signal_handler);
+    pid_t pid = get_daemon_pid();
+    if(pid==0)
+        return 0;
+    kill(pid, SIGUSR1);
+    printf("Signal send to pid: %d\n", pid);
     return 0;
 }
 

@@ -40,7 +40,7 @@
         pid_t pid;
         int priority, status;
         int done_tasks, total_tasks;
-        void *response;
+        struct file_details* response;
         char *path;
     };
 
