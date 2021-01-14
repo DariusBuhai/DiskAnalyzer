@@ -2,10 +2,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include "process_manager.h"
 #include "memory_manager.h"
+#include "signal_manager.h"
 #include "Shared/shared.h"
 #include "Worker/analyzer.h"
 
@@ -57,8 +59,13 @@ int process_signal(struct signal_details signal){
             process->priority = signal.priority;
             process->path = signal.path;
 
-            printf("Process with id: %d has just started\n", process->pid);
+            /// Send result back to client, verify eligibility here!
+            char* output = malloc(sizeof(char)*1024);
+            sprintf(output, "Created analysis task with ID `%d` for `%s` and priority `%s`", process->pid, process->path, get_literal_priority(process->priority));
+            write_daemon_output(output);
+            send_signal(signal.ppid);
 
+            /// Call function
             analyze_dir(signal.path, process);
         }
     }

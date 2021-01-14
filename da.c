@@ -11,14 +11,6 @@
 #define RESUME 3
 #define KILL 4
 
-char* get_literal_priority(int priority){
-    if(priority==1)
-        return "low";
-    if(priority==2)
-        return "normal";
-    return "high";
-}
-
 int is_option(char* option, char* str1, char *str2){
     return strcmp(option, str1)==0 || strcmp(option, str2)==1;
 }
@@ -39,6 +31,19 @@ void write_to_file(char* file_location, char data[]){
     close(tf);
 }
 
+char* read_from_file(char* file_location){
+    struct stat buffer;
+    if(stat(file_location, &buffer)<0){
+        printf("No file available!\n");
+        return 0;
+    }
+    FILE* fp = fopen(file_location, "r");
+    char* data = malloc(sizeof(char)*buffer.st_size);
+
+    fread(data, buffer.st_size, 1, fp);
+    return data;
+}
+
 pid_t get_daemon_pid(){
     char *file_location = "TempData/daemon.pid";
     struct stat buffer;
@@ -52,8 +57,13 @@ pid_t get_daemon_pid(){
     return atoi(data);
 }
 
+void print_daemon_output(int signo){
+    char* data = read_from_file("TempData/daemon_output.txt");
+    printf("%s\n", data);
+}
+
 int initialize_signal(){
-    signal(SIGUSR2, NULL);
+    signal(SIGINT, print_daemon_output);
     return 0;
 }
 
@@ -62,8 +72,12 @@ int send_signal(){
     if(pid==0)
         return 0;
     kill(pid, SIGINT);
-    printf("Signal send to pid: %d\n", pid);
     return 0;
+}
+
+void send_daemon_instruction(char* instructions){
+    write_to_file("TempData/daemon_instruction.txt", instructions);
+    send_signal();
 }
 
 int main(int argc, char **argv){
@@ -87,11 +101,8 @@ int main(int argc, char **argv){
         /// Send signal instruction
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPRIORITY %d\nPATH %s\nPPID %d", ADD, priority, path, getpid());
-        write_to_file("TempData/daemon_instruction.txt", instructions);
-        send_signal();
-        /// Receive signal
-        /// Print result
-        printf("Created analysis task with ID `%d` for `%s` and priority `%s`.\n",2, path, get_literal_priority(priority));
+        send_daemon_instruction(instructions);
+        sleep(2);
         return 0;
     }
     /// Suspend
@@ -102,8 +113,7 @@ int main(int argc, char **argv){
         /// Send signal instruction
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", SUSPEND, pid, getpid());
-        write_to_file("TempData/daemon_instruction.txt", instructions);
-        send_signal();
+        send_daemon_instruction(instructions);
         /// Receive signal
         /// Print result
         printf("Task with ID `%d` suspended.\n", pid);
@@ -116,8 +126,7 @@ int main(int argc, char **argv){
         /// Send signal instruction
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", RESUME, pid, getpid());
-        write_to_file("TempData/daemon_instruction.txt", instructions);
-        send_signal();
+        send_daemon_instruction(instructions);
         /// Receive signal
         /// Print result
         printf("Task with ID `%d` resumed.\n", pid);
@@ -131,8 +140,7 @@ int main(int argc, char **argv){
         /// Send signal instruction
         char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", KILL, pid, getpid());
-        write_to_file("TempData/daemon_instruction.txt", instructions);
-        send_signal();
+        send_daemon_instruction(instructions);
         /// Receive signal
         /// Print result
         printf("Removed analysis task with ID `%d`, status `%s` for `%s`\n", pid, status, path);

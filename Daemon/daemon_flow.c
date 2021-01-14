@@ -34,7 +34,6 @@ _Noreturn int run_daemon(){
         int current_time_seconds = time(NULL);
 
         if (current_time_seconds - last_checked_seconds > CHECK_IN_INTERVAL) {
-            /// Periodic routines
             check_processes();
             last_checked_seconds = current_time_seconds;
         }
