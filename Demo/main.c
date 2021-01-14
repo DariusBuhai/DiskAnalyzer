@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Worker/storage.h"
+#include "Worker/analyzer.h"
 
 #define LL long long
 
