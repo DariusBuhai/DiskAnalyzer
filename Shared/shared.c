@@ -48,3 +48,11 @@ char* get_literal_priority(int priority){
     return "high";
 }
 
+
+char* get_current_path(){
+    char* path = malloc(sizeof (char)*MAX_FILE_PATH_SIZE);
+    CURRENT_DIR(path, FILENAME_MAX);
+    strcat(path, "/..");
+    return path;
+}
+

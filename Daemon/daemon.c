@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
 
@@ -63,8 +62,8 @@ static void skeleton_daemon(){
 
 int main(){
 
-    #if !DEBUG
-    skeleton_daemon();
+    #ifndef DEBUG
+        skeleton_daemon();
     #endif
 
     int error = run_daemon();
