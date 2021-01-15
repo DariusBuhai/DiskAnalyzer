@@ -60,7 +60,7 @@ struct file_details* calculate_dirs(struct file_details* location, int *done_tas
         char af[101] = "";
         for(int j=0;j<current->usage*100;++j)
             strcat(af, "#");
-        #if DEBUG
+        #ifdef DEBUG
             printf("%s %.2f%% %.3LfMB %s\n", current->path, current->usage*100, bytes_to_xb(current->size, 2), af);
         #endif
         if(current->is_dir)

@@ -13,17 +13,25 @@ static struct signal_details* current_signal = NULL;
 
 /// Save pid to file
 void save_daemon_pid(const pid_t pid){
-    char* data;
+    char* data = malloc(sizeof (char)*MAX_PID_SIZE);
+    char *complete_pid_path = get_current_path();
+    strcat(complete_pid_path, PID_PATH);
+
     sprintf(data, "%d", pid);
-    write_to_file(PID_PATH, data);
+    write_to_file(complete_pid_path, data);
 }
 
 void write_daemon_output(char* data){
-    write_to_file(OUTPUT_PATH, data);
+    char* complete_output_path = get_current_path();
+    strcat(complete_output_path, OUTPUT_PATH);
+    write_to_file(complete_output_path, data);
 }
 
 struct signal_details* read_daemon_instruction(){
-    char* data = read_from_file(INSTRUCTION_PATH);
+    char* complete_instruction_path = get_current_path();
+    strcat(complete_instruction_path, INSTRUCTION_PATH);
+    char* data = read_from_file(complete_instruction_path);
+
     struct signal_details* incoming_signal = malloc(sizeof (struct signal_details));
     sscanf(data, "TYPE %d", &incoming_signal->type);
     if(incoming_signal->type==ADD){
@@ -59,7 +67,7 @@ void reset_current_signal(){
 
 int send_signal(pid_t pid){
     kill(pid, SIGINT);
-    #if DEBUG
+    #ifdef DEBUG
         printf("Signal send to pid: %d\n", pid);
     #endif
     return 0;

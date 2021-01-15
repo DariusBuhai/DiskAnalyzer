@@ -3,25 +3,29 @@
 
     #include <unistd.h>
 
+    #ifdef WINDOWS
+        #include <direct.h>
+        #define CURRENT_DIR _getcwd
+    #else
+        #include <unistd.h>
+        #define CURRENT_DIR getcwd
+    #endif
+
     /// Settings
-    #define DEBUG 0
+    #define DEBUG
     #define SHOW_ERRORS 0
     #define ALLOWED_PROCESSES 100
     #define CHECK_IN_INTERVAL 1 // seconds
 
-    #if DEBUG
-        #define PID_PATH "../TempData/daemon.pid"
-        #define OUTPUT_PATH "../TempData/daemon_output.txt"
-        #define INSTRUCTION_PATH "../TempData/daemon_instruction.txt"
-    #else
-        #define PID_PATH "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer/TempData/daemon.pid"
-        #define OUTPUT_PATH "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer/TempData/daemon_output.txt"
-        #define INSTRUCTION_PATH "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer/TempData/daemon_instruction.txt"
-    #endif
+    #define PID_PATH "/TempData/daemon.pid"
+    #define OUTPUT_PATH "/TempData/daemon_output.txt"
+    #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
 
     /// Standards
     #define MAX_FILE_PATH_SIZE 2048
     #define MAX_SUBDIRS 4096
+    #define FILENAME_MAX 1024
+    #define MAX_PID_SIZE 10
 
     #define LL long long
     #define LD long double
@@ -70,5 +74,6 @@
     void write_to_file(char*, char data[]);
     char* read_from_file(char*);
     char* get_literal_priority(int);
+    char* get_current_path();
 
 #endif //DISKANALYZER_SHARED_H
