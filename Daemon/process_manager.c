@@ -19,18 +19,13 @@ void check_processes(){
             int status;
             pid_t return_pid = waitpid(get_process_details(i)->pid, &status, WNOHANG);
             if(return_pid==-1){
-                perror(NULL);
-                printf("Process error: %d\n", errno);
+                #ifdef SHOW_ERRORS
+                    perror(NULL);
+                    printf("Process error: %d\n", errno);
+                #endif
             }else if(return_pid==get_process_details(i)->pid)
                 get_process_details(i)->status = DONE;
         }
-
-    /// Example
-    if(process_counter>0){
-        struct process_details* current = get_process_details(process_counter-1);
-        if(current->status==RUNNING)
-            printf("Analysing path: %s. Found %d files, Done: %d. \n",current->path, current->total_tasks, current->done_tasks);
-    }
 
     /// Get highest priority at the moment
     int highest_priority = LOW;
@@ -94,6 +89,63 @@ int process_signal(struct signal_details signal){
             }
         }else
             sprintf(output, "Cannot find task with ID `%d`", signal.pid);
+        write_daemon_output(output);
+        send_signal(signal.ppid);
+    }
+
+    if(signal.type == INFO){
+         /// Determine the process running with that pid
+        struct process_details* process = NULL;
+        for(int i=0;i<*get_process_counter();++i)
+            if(get_process_details(i)->pid==signal.pid)
+                process = get_process_details(i);
+        char* output = malloc(sizeof(char)*1024);
+        if(process != NULL)
+            sprintf(output,"The process with ID %d is %d",signal.pid, process->status);
+        else
+            sprintf(output, "Cannot find task with ID `%d`", signal.pid);
+        write_daemon_output(output);
+        send_signal(signal.ppid);
+    }
+
+    if(signal.type == LIST){
+        char* output = malloc(sizeof(char)*1024);
+        sprintf(output,"ID  PRI  PATH   Done    Status              Details\n");
+        for(int i = 0 ; i < *get_process_counter(); i++){
+                struct process_details* process = NULL;
+                process = get_process_details(i);
+                if(process != NULL){
+                    int percent_done;
+                    percent_done = (process->response->usage * 100) / process->response->size;
+                    sprintf(output,"%d ***  %s %d%% in %s  %d, %d\n",process->pid,process->path,percent_done,process->status,process->response->childs_counter,process->response->is_dir);
+                }
+            }
+        write_daemon_output(output);
+        send_signal(signal.ppid);
+    }
+
+    if(signal.type == PRINT){
+        char* output = malloc(sizeof(char)*1024);
+        int percent_done;
+        sprintf(output,"Path  Usage   Size   Amount\n");
+        for(int i = 0 ; i < *get_process_counter(); i++)
+            {
+                struct process_details* process = NULL;
+                process = get_process_details(i);
+                if(process != NULL && process->status == DONE)
+                {
+                    percent_done = (process->response->usage * 100) / process->response->size;
+                    sprintf(output,"%s  %d%%  %d MB \n",process->path,percent_done,process->response->size);
+                    for(i = 0 ; i < process->response->childs_counter; i++)
+                    {
+                        struct file_details* child;
+                        child = process->response->childs[i];
+                        percent_done = (child->usage * 100) / child->size;
+                        sprintf(output,"%s  %d%%  %d MB \n",child->path,percent_done,child->size);
+                    }
+                    sprintf(output,"New task\n");
+                }
+            }
         write_daemon_output(output);
         send_signal(signal.ppid);
     }

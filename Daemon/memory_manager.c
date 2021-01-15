@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 
@@ -15,11 +14,15 @@ static int shm_fd_processes, shm_fd_counter;
 int create_shm_memory(char shm_name[], int *shm_fd, int size){
     *shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if((*shm_fd)<0){
-        perror(NULL);
+        #ifdef SHOW_ERRORS
+            perror(NULL);
+        #endif
         return errno;
     }
     if(ftruncate(*shm_fd, getpagesize()*size)==-1){
-        perror(NULL);
+        #ifdef SHOW_ERRORS
+            perror(NULL);
+        #endif
         shm_unlink(shm_name);
         return errno;
     }
@@ -29,7 +32,9 @@ int create_shm_memory(char shm_name[], int *shm_fd, int size){
 void* get_shm_ptr(char name[], int shm_fd, int offset){
     void* shm_ptr = mmap(0, getpagesize(), PROT_WRITE | PROT_READ, MAP_SHARED, shm_fd, getpagesize()*offset);
     if(shm_ptr == MAP_FAILED){
-        perror(NULL);
+        #ifdef SHOW_ERRORS
+            perror(NULL);
+        #endif
         shm_unlink(name);
         return NULL;
     }
@@ -44,7 +49,6 @@ int initialize_processes(){
         struct process_details* process = get_process_details(i);
         if(process==NULL)
             return errno;
-        process = malloc(sizeof(struct process_details));
     }
     int* process_counter = get_process_counter();
     if(process_counter==NULL)

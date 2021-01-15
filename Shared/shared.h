@@ -13,10 +13,11 @@
 
     /// Settings
     #define DEBUG
-    #define SHOW_ERRORS 0
+    //#define SHOW_ERRORS
     #define ALLOWED_PROCESSES 100
     #define CHECK_IN_INTERVAL 1 // seconds
 
+    /// Signals paths
     #define PID_PATH "/TempData/daemon.pid"
     #define OUTPUT_PATH "/TempData/daemon_output.txt"
     #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
@@ -44,6 +45,9 @@
     #define SUSPEND 2
     #define RESUME 3
     #define KILL 4
+    #define INFO 5
+    #define LIST 6
+    #define PRINT 7
 
     /// Data types
     struct signal_details{

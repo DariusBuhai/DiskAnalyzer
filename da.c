@@ -10,15 +10,16 @@
 #define SUSPEND 2
 #define RESUME 3
 #define KILL 4
+#define INFO 5
+#define LIST 6
+#define PRINT 7
+
+#define PID_PATH "TempData/daemon.pid"
+#define OUTPUT_PATH "TempData/daemon_output.txt"
+#define INSTRUCTION_PATH "TempData/daemon_instruction.txt"
 
 int is_option(char* option, char* str1, char *str2){
-    return strcmp(option, str1)==0 || strcmp(option, str2)==1;
-}
-
-char* itoa(int x,int size){
-    char* data = malloc(sizeof(char)*size);
-    sprintf(data, "%d", x);
-    return data;
+    return strcmp(option, str1)==0 || strcmp(option, str2)==0;
 }
 
 void write_to_file(char* file_location, char data[]){
@@ -45,7 +46,7 @@ char* read_from_file(char* file_location){
 }
 
 pid_t get_daemon_pid(){
-    char *file_location = "TempData/daemon.pid";
+    char *file_location = PID_PATH;
     struct stat buffer;
     if(stat(file_location, &buffer)<0){
         printf("No pid available!\n");
@@ -58,25 +59,24 @@ pid_t get_daemon_pid(){
 }
 
 void print_daemon_output(int signo){
-    char* data = read_from_file("TempData/daemon_output.txt");
+    char* data = read_from_file(OUTPUT_PATH);
     printf("%s\n", data);
 }
 
-int initialize_signal(){
-    signal(SIGINT, print_daemon_output);
-    return 0;
+void initialize_signal(){
+    signal(SIGUSR2, print_daemon_output);
 }
 
 int send_signal(){
     pid_t pid = get_daemon_pid();
     if(pid==0)
         return 0;
-    kill(pid, SIGINT);
+    kill(pid, SIGUSR1);
     return 0;
 }
 
 void send_daemon_instruction(char* instructions){
-    write_to_file("TempData/daemon_instruction.txt", instructions);
+    write_to_file(INSTRUCTION_PATH, instructions);
     send_signal();
 }
 
@@ -142,16 +142,34 @@ int main(int argc, char **argv){
     if(is_option(argv[1], "-i", "--info")){
         if(argc<3)
             return -1;
-
+        int pid = atoi(argv[2]);
+        /// Send signal instruction
+        char* instructions = malloc(sizeof(char)*1024);
+        sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", INFO, pid, getpid());
+        send_daemon_instruction(instructions);
+        sleep(2);
     }
     /// List
     if(is_option(argv[1], "-l", "--list")){
-
+        if(argc<3)
+            return -1;
+        int pid = atoi(argv[2]);
+        /// Send signal instruction
+        char* instructions = malloc(sizeof(char)*1024);
+        sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", LIST, pid, getpid());
+        send_daemon_instruction(instructions);
+        sleep(2);
     }
     /// Analysis report for tasks that are "done"
     if(is_option(argv[1], "-p", "--print")){
         if(argc<3)
             return -1;
+        int pid = atoi(argv[2]);
+        /// Send signal instruction
+        char* instructions = malloc(sizeof(char)*1024);
+        sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", PRINT, pid, getpid());
+        send_daemon_instruction(instructions);
+        sleep(2);
     }
 
     return 0;

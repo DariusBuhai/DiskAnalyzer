@@ -38,7 +38,7 @@ struct signal_details* read_daemon_instruction(){
         incoming_signal->path = malloc(sizeof(char)*MAX_FILE_PATH_SIZE);
         sscanf(data, "TYPE %d\nPRIORITY %d\nPATH %s\nPPID %d", &incoming_signal->type, &incoming_signal->priority, incoming_signal->path, &incoming_signal->ppid);
     }
-    if(incoming_signal->type==SUSPEND || incoming_signal->type==RESUME || incoming_signal->type==KILL){
+    if(incoming_signal->type==SUSPEND || incoming_signal->type==RESUME || incoming_signal->type==KILL || incoming_signal->type==INFO || incoming_signal->type==LIST || incoming_signal->type==PRINT){
         incoming_signal->path = malloc(sizeof(char)*MAX_FILE_PATH_SIZE);
         sscanf(data, "TYPE %d\nPID %d\nPPID %d", &incoming_signal->type, &incoming_signal->pid, &incoming_signal->ppid);
     }
@@ -53,7 +53,7 @@ void handle_incoming_signal(int signo){
 
 int initialize_signals(const pid_t pid){
     save_daemon_pid(pid);
-    signal(SIGINT, handle_incoming_signal);
+    signal(SIGUSR1, handle_incoming_signal);
     return 0;
 }
 
@@ -66,7 +66,7 @@ void reset_current_signal(){
 }
 
 int send_signal(pid_t pid){
-    kill(pid, SIGINT);
+    kill(pid, SIGUSR2);
     #ifdef DEBUG
         printf("Signal send to pid: %d\n", pid);
     #endif
