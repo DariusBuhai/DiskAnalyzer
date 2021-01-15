@@ -22,7 +22,6 @@ _Noreturn int run_daemon(){
     }
 
     while (1) {
-
         if(get_current_signal()!=NULL){
             int error = process_signal(*get_current_signal());
             if(error)

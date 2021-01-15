@@ -27,7 +27,7 @@ struct file_details* save_dirs(struct file_details* location, int *total_tasks){
         if(strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0)
             continue;
         if (fstatat(dirfd(dir_path), file->d_name, &buffer, 0) < 0){
-            #if SHOW_ERRORS
+            #ifdef SHOW_ERRORS
                 perror(file->d_name);
             #endif
             continue;
