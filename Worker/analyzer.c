@@ -16,8 +16,9 @@ int is_dir(const char *path) {
 
 long long get_file_size(const char *path) {
   struct stat path_stat;
-  stat(path, &path_stat);
-  return path_stat.st_size;
+  if(stat(path, &path_stat)==0)
+    return path_stat.st_size;
+  return 0;
 }
 
 void set_next_path(const char* base_path, const char* name, char *next_path) {

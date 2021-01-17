@@ -61,7 +61,7 @@ static void skeleton_daemon(){
 int main(){
 
     save_current_path();
-    printf("Current path: %s\n", get_current_path());
+    //printf("Current path: %s\n", get_current_path());
 
     #ifndef DEBUG
       skeleton_daemon();
