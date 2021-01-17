@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include <errno.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
+#include "../Shared/shared.h"
 #include "memory_manager.h"
-#include "Shared/shared.h"
 
-static int shm_fd_processes, shm_fd_counter;
+static int shm_fd_processes, shm_fd_counter, shm_fd_task_details;
 
 int create_shm_memory(char shm_name[], int *shm_fd, int size){
     *shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
@@ -29,8 +30,8 @@ int create_shm_memory(char shm_name[], int *shm_fd, int size){
     return 0;
 }
 
-void* get_shm_ptr(char name[], int shm_fd, int offset){
-    void* shm_ptr = mmap(0, getpagesize(), PROT_WRITE | PROT_READ, MAP_SHARED, shm_fd, getpagesize()*offset);
+void* get_shm_ptr(char name[], int shm_fd, int offset, int len){
+    void* shm_ptr = mmap(0, len, PROT_WRITE | PROT_READ, MAP_SHARED, shm_fd, getpagesize()*offset);
     if(shm_ptr == MAP_FAILED){
         #ifdef SHOW_ERRORS
             perror(NULL);
@@ -41,9 +42,19 @@ void* get_shm_ptr(char name[], int shm_fd, int offset){
     return shm_ptr;
 }
 
+void close_shm_ptr(void *shm_ptr, int len) {
+    int ret = munmap(shm_ptr, len);
+    if (ret == -1) {
+      perror("munmap failed");
+      return;
+    }
+}
+
 int initialize_processes(){
+
     create_shm_memory("processes", &shm_fd_processes, ALLOWED_PROCESSES);
     create_shm_memory("process_counter", &shm_fd_counter, 1);
+    create_shm_memory("task_details", &shm_fd_task_details, sizeof(int));
 
     for(int i=0;i<ALLOWED_PROCESSES;++i){
         struct process_details* process = get_process_details(i);
@@ -58,15 +69,16 @@ int initialize_processes(){
 }
 
 struct process_details* get_process_details(int id){
-    void* process = get_shm_ptr("processes", shm_fd_processes, id);
-    if(process==NULL)
-        return NULL;
+    void* process = get_shm_ptr("processes", shm_fd_processes, id, getpagesize());
     return process;
 }
 
 int* get_process_counter(){
-    void* process_counter = get_shm_ptr("process_counter", shm_fd_counter, 0);
-    if(process_counter==NULL)
-        return NULL;
+    void* process_counter = get_shm_ptr("process_counter", shm_fd_counter, 0, sizeof(int));
     return process_counter;
+}
+
+int* get_task_details() {
+    int* task_details = get_shm_ptr("task_details", shm_fd_task_details, 0, sizeof(int));
+    return task_details;
 }
