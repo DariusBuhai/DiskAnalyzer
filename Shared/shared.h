@@ -94,5 +94,7 @@ char* get_literal_status(int);
 char* get_current_path();
 FILE* safe_fopen(const char*, const char*, int);
 void safe_fclose(FILE*, int);
+int is_prefix(const char*, const char*);
+
 
 #endif //DISKANALYZER_SHARED_H

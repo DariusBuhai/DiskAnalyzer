@@ -78,6 +78,18 @@ int process_signal(struct signal_details signal){
     // adding a new task in the task list
 
     if (signal.type == ADD) {
+        char output[1024];
+        for (int i = 1; i <= task_cnt; ++ i) {
+            if (tasks[i].status == REMOVED) continue;
+            if (is_prefix(tasks[i].path, signal.path)) {
+                  sprintf(output, "Directory `%s` is already included in analysis with ID `%d`",
+                      signal.path, i);
+                write_daemon_output(output);
+                send_signal(signal.ppid);
+                return 0;
+            }
+        }
+
         ++ task_cnt;
 
         // add task to list
@@ -93,7 +105,6 @@ int process_signal(struct signal_details signal){
         close_shm_ptr(task_details, sizeof(*task_details) * getpagesize());
 
         // Send result back to client, verify eligibility here!
-        char output[1024];
         sprintf(output, "Created analysis task with ID `%d` for `%s` and priority `%s`",
             task_cnt, tasks[task_cnt].path, get_literal_priority(tasks[task_cnt].priority));
         write_daemon_output(output);
