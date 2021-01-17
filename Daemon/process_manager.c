@@ -4,12 +4,17 @@
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "process_manager.h"
 #include "memory_manager.h"
 #include "signal_manager.h"
-#include "Shared/shared.h"
-#include "Worker/analyzer.h"
+#include "../Worker/analyzer2.h"
+
+int task_cnt = 0;
+struct task_details tasks[1024];
 
 void check_processes(){
     int process_counter = *get_process_counter();
@@ -41,111 +46,211 @@ void check_processes(){
             kill(get_process_details(i)->pid, SIGCONT);
 }
 
+void update_ids() {
+  // update task statuses according to the changes made by workers
+  int *details = get_task_details();
+  for (int i = 1; i <= task_cnt; ++ i) {
+    if (details[i] != tasks[i].status) {
+      tasks[i].status = details[i];
+    }
+  }
+  /* close_shm_ptr(details, sizeof(*details) * getpagesize()); */
+}
+
+void take_new_task() {
+    int* process_counter = get_process_counter();
+    if (*process_counter == ALLOWED_PROCESSES) {
+      return;
+    }
+    close_shm_ptr(process_counter, sizeof(*process_counter));
+
+    int next_task_id = -1;
+    // look for a pending task and start a process for it
+    for (int i = 1; i <= task_cnt; ++ i) {
+      if (tasks[i].status != T_PENDING) continue;
+      if (next_task_id == -1 || tasks[i].priority > tasks[next_task_id].priority) {
+        next_task_id = i;
+      }
+    }
+
+    // no new task
+    if (next_task_id == -1) {
+      return;
+    }
+
+    puts("found new task");
+    // found new task
+    pid_t pid = fork();
+
+    if (pid < 0) {
+      perror("couldn't fork child");
+      return;
+    }
+
+    if (pid == 0) {
+      int *details = get_task_details();
+      int* process_counter = get_process_counter();
+      details[next_task_id] = T_IN_PROGRESS;
+
+      *process_counter += 1;
+      printf("%s, %d\n", tasks[next_task_id].path, next_task_id);
+      analyze(tasks[next_task_id].path, next_task_id);
+      *process_counter -= 1;
+
+      details[next_task_id] = T_DONE;
+      close_shm_ptr(details, sizeof(*details) * getpagesize());
+      close_shm_ptr(process_counter, sizeof(*process_counter));
+      exit(0);
+    }
+    else {
+      tasks[next_task_id].status = T_IN_PROGRESS;
+      tasks[next_task_id].worker_pid = pid;
+    }
+}
+
 int process_signal(struct signal_details signal){
-    if(signal.type==ADD){
-        pid_t pid = fork();
-        if(pid<0)
-            return errno;
-        if(pid==0){
-            /// Manage child process
-            struct process_details* process = get_process_details((*get_process_counter())++);
+    // adding a new task in the task list
 
-            process->pid = getpid();
-            process->priority = signal.priority;
-            process->path = signal.path;
+    if (signal.type == ADD) {
+        ++ task_cnt;
 
-            /// Send result back to client, verify eligibility here!
-            char* output = malloc(sizeof(char)*1024);
-            sprintf(output, "Created analysis task with ID `%d` for `%s` and priority `%s`", process->pid, process->path, get_literal_priority(process->priority));
-            write_daemon_output(output);
-            send_signal(signal.ppid);
+        // add task to list
+        tasks[task_cnt].task_id = task_cnt;
+        strcpy(tasks[task_cnt].path, signal.path);
+        tasks[task_cnt].status = T_PENDING;
+        tasks[task_cnt].priority = signal.priority;
+        tasks[task_cnt].worker_pid = -1;
 
-            /// Call function
-            analyze_dir(signal.path, process);
-        }
+        // update task_status in shm
+        int* task_details = get_task_details();
+        task_details[task_cnt] =  T_PENDING;
+        close_shm_ptr(task_details, sizeof(*task_details) * getpagesize());
+
+        // Send result back to client, verify eligibility here!
+        char output[1024];
+        sprintf(output, "Created analysis task with ID `%d` for `%s` and priority `%s`",
+            task_cnt, tasks[task_cnt].path, get_literal_priority(tasks[task_cnt].priority));
+        write_daemon_output(output);
+        send_signal(signal.ppid);
+        return 0;
     }
 
-    if(signal.type==SUSPEND || signal.type==RESUME || signal.type==KILL){
-        /// Determine the process running with that pid
-        struct process_details* process = NULL;
-        for(int i=0;i<*get_process_counter();++i)
-            if(get_process_details(i)->pid==signal.pid)
-                process = get_process_details(i);
+    if (signal.pid <= 0 && signal.type != LIST) {
+      write_daemon_output("Please input a valid task id.");
+      send_signal(signal.ppid);
+      return 0;
+    }
 
-        char* output = malloc(sizeof(char)*1024);
-        if(process!=NULL){
-            if(signal.type==SUSPEND){
-                kill(signal.pid, SIGSTOP);
-                process->status = FORCE_PAUSED;
+    // suspending / resuming / killing a worker
+    if (signal.type == SUSPEND || signal.type == RESUME || signal.type == KILL){
+        // Determine the process running with that pid
+        int worker_pid = tasks[signal.pid].worker_pid;
+
+        char output[1024];
+        if (worker_pid != -1 && signal.pid <= task_cnt) {
+            int* task_details = get_task_details();
+            if (signal.type == SUSPEND){
+                kill(worker_pid, SIGSTOP);
+                task_details[signal.pid] = T_PAUSED;
                 sprintf(output, "Task with ID `%d` suspended", signal.pid);
-            }else if(signal.type==RESUME){
-                kill(signal.pid, SIGCONT);
-                process->status = RUNNING;
+            }
+            else if (signal.type == RESUME){
+                kill(worker_pid, SIGCONT);
+                task_details[signal.pid] = T_IN_PROGRESS;
                 sprintf(output, "Task with ID `%d` resumed", signal.pid);
-            }else{
-                kill(signal.pid, SIGTERM);
-                process->status = KILLED;
-                sprintf(output, "Removed analysis task with ID `%d` for `%s`", signal.pid, process->path);
             }
-        }else
-            sprintf(output, "Cannot find task with ID `%d`", signal.pid);
+            else {
+                kill(worker_pid, SIGTERM);
+                task_details[signal.pid] = T_REMOVED;
+                sprintf(output, "Removed analysis task with ID `%d` for `%s`",
+                    signal.pid, tasks[signal.pid].path);
+            }
+            close_shm_ptr(task_details, sizeof(*task_details) * getpagesize());
+        }
+        else {
+            sprintf(output, "Task with ID `%d` is not running, or was never created.", signal.pid);
+        }
+
+        if (signal.type == KILL) {
+            char file_name[50];
+            sprintf(file_name, "data/analysis_%d", signal.pid);
+            remove(file_name);
+            sprintf(file_name, "data/status_%d", signal.pid);
+            remove(file_name);
+        }
+
         write_daemon_output(output);
         send_signal(signal.ppid);
+        return 0;
     }
 
-    if(signal.type == INFO){
-         /// Determine the process running with that pid
-        struct process_details* process = NULL;
-        for(int i=0;i<*get_process_counter();++i)
-            if(get_process_details(i)->pid==signal.pid)
-                process = get_process_details(i);
-        char* output = malloc(sizeof(char)*1024);
-        if(process != NULL)
-            sprintf(output,"The process with ID %d is %d",signal.pid, process->status);
-        else
-            sprintf(output, "Cannot find task with ID `%d`", signal.pid);
+    if (signal.type == INFO){
+         // Determine the process running with that pid
+        char output[1024];
+        if (signal.pid <= task_cnt && tasks[signal.pid].status != T_REMOVED) {
+          sprintf(output, "data/status_%d", signal.pid);
+          FILE* fd = fopen(output, "r");
+
+          int files, dirs, percentage;
+          fscanf(fd, "%d%%\n%d files\n%d dirs",
+              &percentage, &files, &dirs);
+          fclose(fd);
+
+          char pri[] = "***";
+          pri[tasks[signal.pid].priority] = '\0';
+
+          sprintf(output, "ID  PRI PATH  DONE  STATUS  DETAILS\n%d  "
+              "%s  %s  %d%%  %s  %d files, %d dirs", 
+              signal.pid, pri, tasks[signal.pid].path, percentage,
+              get_literal_status(tasks[signal.pid].status), files, dirs);
+        }
+        else {
+            sprintf(output, "Task with ID `%d` does not exist.", signal.pid);
+        }
         write_daemon_output(output);
         send_signal(signal.ppid);
+        return 0;
     }
 
-    if(signal.type == LIST){
-        char* output = malloc(sizeof(char)*1024);
-        sprintf(output,"ID  PRI  PATH   Done    Status              Details\n");
-        for(int i = 0 ; i < *get_process_counter(); i++){
-                struct process_details* process = NULL;
-                process = get_process_details(i);
-                if(process != NULL){
-                    int percent_done;
-                    percent_done = (process->response->usage * 100) / process->response->size;
-                    sprintf(output,"%d ***  %s %d%% in %s  %d, %d\n",process->pid,process->path,percent_done,process->status,process->response->childs_counter,process->response->is_dir);
-                }
-            }
+    if (signal.type == LIST) {
+        char aux[50];
+        char line[256];
+        char output[4096] = "";
+        sprintf(output,"ID  PRI  PATH  Done  Status  Details\n");
+        int max_len = 4096;
+
+        for(int i = 1; i <= task_cnt; ++ i) {
+            if (tasks[i].status == T_REMOVED) continue;
+
+            sprintf(aux, "data/status_%d", i);
+            FILE* fd = fopen(aux, "r");
+
+            int files, dirs, percentage;
+            fscanf(fd, "%d%%\n%d files\n%d dirs",
+                &percentage, &files, &dirs);
+            fclose(fd);
+
+            char pri[] = "***";
+            pri[tasks[i].priority] = '\0';
+
+            snprintf(output + strlen(output), max_len - strlen(output), 
+                "%d  %s  %s  %d%%  %s  %d files, %d dirs\n", 
+                i, pri, tasks[i].path, percentage,
+                get_literal_status(tasks[i].status), files, dirs);
+        }
         write_daemon_output(output);
         send_signal(signal.ppid);
+        return 0;
     }
 
-    if(signal.type == PRINT){
-        char* output = malloc(sizeof(char)*1024);
-        int percent_done;
-        sprintf(output,"Path  Usage   Size   Amount\n");
-        for(int i = 0 ; i < *get_process_counter(); i++)
-            {
-                struct process_details* process = NULL;
-                process = get_process_details(i);
-                if(process != NULL && process->status == DONE)
-                {
-                    percent_done = (process->response->usage * 100) / process->response->size;
-                    sprintf(output,"%s  %d%%  %d MB \n",process->path,percent_done,process->response->size);
-                    for(i = 0 ; i < process->response->childs_counter; i++)
-                    {
-                        struct file_details* child;
-                        child = process->response->childs[i];
-                        percent_done = (child->usage * 100) / child->size;
-                        sprintf(output,"%s  %d%%  %d MB \n",child->path,percent_done,child->size);
-                    }
-                    sprintf(output,"New task\n");
-                }
-            }
+    if (signal.type == PRINT) {
+        char aux[50];
+        char output[2048];
+        if (tasks[signal.pid].status == T_DONE) {
+            sprintf(aux, "data/analysis_%d", signal.pid);
+            FILE* fd = fopen(aux, "r");
+        }
+
         write_daemon_output(output);
         send_signal(signal.ppid);
     }

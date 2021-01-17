@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <time.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -6,7 +5,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-
 
 #include "shared.h"
 
@@ -17,42 +15,60 @@ LD bytes_to_xb(LL bytes, int x){
     return xb;
 }
 
-void write_to_file(char* file_location, char data[]){
-    struct stat buffer;
-    if(stat(file_location, &buffer)>=0)
-        remove(file_location);
-    int tf = open(file_location, O_CREAT | O_WRONLY, S_IRWXU);
-    if(write(tf, data, sizeof (char)*strlen(data)) <= 0)
-        perror(NULL);
-    close(tf);
+int fsize(FILE *fp) {
+  fseek(fp, 0, SEEK_END); 
+  int size = ftell(fp);
+  fseek(fp, 0, SEEK_SET); 
+  return size;
 }
 
-char* read_from_file(char* file_location){
-    struct stat buffer;
-    if(stat(file_location, &buffer)<0){
-        printf("No file available!\n");
-        return 0;
-    }
-    FILE* fp = fopen(file_location, "r");
-    char* data = malloc(sizeof(char)*buffer.st_size);
+void write_to_file(const char* file_path, const char* data){
+  FILE* fp = fopen(file_path, "w");
+  if (fp == NULL) {
+    fprintf(stderr, "Could not open output file\n");
+    return;
+  }
 
-    fread(data, buffer.st_size, 1, fp);
+  fprintf(fp, "%s", data);
+  fclose(fp);
+}
+
+char* read_from_file(const char* file_path){
+    FILE* fp = fopen(file_path, "r");
+    if (fp == NULL) {
+      fprintf(stderr, "Could not open input file\n");
+      return NULL;
+    }
+
+    int file_size = fsize(fp);
+    char* data = malloc(sizeof(char) * file_size);
+    fread(data, file_size, 1, fp);
+    fclose(fp);
+
     return data;
 }
 
 char* get_literal_priority(int priority){
-    if(priority==1)
+    if (priority == 1)
         return "low";
-    if(priority==2)
+    if (priority == 2)
         return "normal";
-    return "high";
+    if (priority == 3)
+        return "high";
+    return "unknown";
 }
 
+char* get_literal_status(int status) {
+    if (status == T_PENDING) return "pending";
+    if (status == T_IN_PROGRESS) return "in progress";
+    if (status == T_PAUSED) return "paused";
+    if (status == T_REMOVED) return "killed";
+    if (status == T_DONE) return "done";
+    return "unknown";
+}
 
 char* get_current_path(){
-    char* path = malloc(sizeof (char)*MAX_FILE_PATH_SIZE);
-    CURRENT_DIR(path, FILENAME_MAX);
-    strcat(path, "/..");
+    char* path = malloc(sizeof(char) * FILENAME_MAX);
+    getcwd(path, FILENAME_MAX);
     return path;
 }
-

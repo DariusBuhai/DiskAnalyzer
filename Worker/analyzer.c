@@ -4,8 +4,9 @@
 #include <string.h>
 #include <pthread.h>
 
+#include "../Shared/shared.h"
+#include "../Worker/analyzer.h"
 #include "temp_data.h"
-#include "Shared/shared.h"
 
 struct file_details* save_dirs(struct file_details* location, int *total_tasks){
     struct dirent* file;
@@ -33,7 +34,7 @@ struct file_details* save_dirs(struct file_details* location, int *total_tasks){
             continue;
         }
 
-        char new_path[MAX_FILE_PATH_SIZE];
+        char new_path[FILENAME_MAX];
         snprintf(new_path, sizeof(new_path), "%s/%s", location->path, file->d_name);
 
         struct file_details* new_location = new_file_details(new_path);
@@ -61,7 +62,7 @@ struct file_details* calculate_dirs(struct file_details* location, int *done_tas
         for(int j=0;j<current->usage*100;++j)
             strcat(af, "#");
         #ifdef DEBUG
-            printf("%s %.2f%% %.3LfMB %s\n", current->path, current->usage*100, bytes_to_xb(current->size, 2), af);
+          printf("%s %.2f%% %.3LfMB %s\n", current->path, current->usage*100, bytes_to_xb(current->size, 2), af);
         #endif
         if(current->is_dir)
             calculate_dirs(current, done_tasks);
