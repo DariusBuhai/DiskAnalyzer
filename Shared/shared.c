@@ -96,3 +96,9 @@ void safe_fclose(FILE *file_name, int task_id) {
     remove(aux);
   }
 }
+
+int is_prefix(const char *pre, const char *str) {
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : memcmp(pre, str, lenpre) == 0;
+}
