@@ -197,7 +197,7 @@ void analyze(const char* path, int job_id) {
     hashtags[i] = '#';
   }
 
-  fprintf(fd, "Path  Usage  Size  Amount\n%s  0%%  %lld%s  %s\n|\n",
+  fprintf(fd, "Path  Usage  Size  Amount\n%s  100%%  %lld%s  %s\n|\n",
       path, copy, unit, hashtags);
 
   int file_count = 0, dir_count = 0;
