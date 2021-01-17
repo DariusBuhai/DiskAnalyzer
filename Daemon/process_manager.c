@@ -106,6 +106,12 @@ int process_signal(struct signal_details signal){
         // Send result back to client, verify eligibility here!
         sprintf(output, "Created analysis task with ID `%d` for `%s` and priority `%s`",
             task_cnt, tasks[task_cnt].path, get_literal_priority(tasks[task_cnt].priority));
+
+        char *status_path = get_current_path();
+        strcat(status_path, STATUS_PATH);
+        sprintf(status_path, status_path, task_cnt);
+        remove(status_path);
+
         write_daemon_output(output);
         send_signal(signal.ppid);
         return 0;
@@ -184,6 +190,13 @@ int process_signal(struct signal_details signal){
           strcat(status_path, STATUS_PATH);
           sprintf(status_path, status_path, signal.pid);
 
+          if(access(status_path, F_OK )!=0){
+              sprintf(output, "Task with ID `%d` has not yet been loaded!", signal.pid);
+              write_daemon_output(output);
+              send_signal(signal.ppid);
+              return 0;
+          }
+
           FILE* fd = safe_fopen(status_path, "r", signal.pid);
 
           int files, dirs, percentage;
@@ -219,6 +232,8 @@ int process_signal(struct signal_details signal){
             strcat(status_path, STATUS_PATH);
             sprintf(status_path, status_path, i);
 
+            if(access(status_path, F_OK )!=0)
+                continue;
             FILE* fd = safe_fopen(status_path, "r", i);
 
             int files, dirs, percentage;
@@ -248,6 +263,7 @@ int process_signal(struct signal_details signal){
             char *analysis_path = get_current_path();
             strcat(analysis_path, ANALYSIS_PATH);
             sprintf(analysis_path, analysis_path, signal.pid);
+
 
             FILE* fd = safe_fopen(analysis_path, "r", signal.pid);
             if (fd) {
