@@ -86,7 +86,6 @@ struct task_details {
 };
 
 /// Methods
-LD bytes_to_xb(LL, int);
 int fsize(FILE *fp);
 void write_to_file(const char*, const char* data);
 char* read_from_file(const char*);
