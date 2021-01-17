@@ -1,32 +1,24 @@
 GCC=gcc
-FLAGS=-std=c11 -D_DEFAULT_SOURCE -lrt
-DAEMON_CFILES:=$(wildcard ./Daemon/*.c)
-CLIENT_CFILES:=$(wildcard ./Worker/*.c)
-SHARED_CFILES:=$(wildcard ./Shared/*.c)
-# SHARED_LIB:=-IShared -IDaemon -IWorker -pthread
-SANITIZER:=-fsanitize=address,undefined,signed-integer-overflow
-WARNINGS:=-Wall -Wextra
+FLAGS=-fsanitize=address,undefined,signed-integer-overflow
 
-CLIENT_O_FILES:=$(patsubst %.c, %.o, $(CLIENT_CFILES) $(SHARED_CFILES))
+DAEMON_CFILES:=$(wildcard Daemon/*.c)
+WORKER_CFILES:=$(wildcard Worker/*.c)
+SHARED_CFILES:=$(wildcard Shared/*.c)
+LIB_HFILES:=-IShared -IDaemon -IWorker -pthread
 
-COMP_FLAGS:=$(FLAGS) $(SANITIZER) $(WARNINGS) $(SHARED_LIB)
+all: daemon_release da
+debug: daemon_debug da
 
-all: client daemon
-debug: daemon_debug client_debug
+daemon_release: $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES)
+	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o daemon_runner $(LIB_HFILES) $(FLAGS)
 
-daemon: $(DAEMON_CFILES) $(SHARED_CFILES)
-	$(GCC) $(FLAGS) $(SANITIZER) $(WARNINGS) $(SHARED_LIB) $(SHARED_CFILES) $(DAEMON_CFILES) -o daemon
+daemon_debug: $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES)
+	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o daemon_runner $(LIB_HFILES) $(FLAGS) -DDEBUG
 
-daemon_debug: $(DAEMON_CFILES) $(SHARED_CFILES)
-	$(GCC) $(FLAGS) $(SANITIZER) $(WARNINGS) $(SHARED_LIB) $(SHARED_CFILES) $(DAEMON_CFILES) -o daemon
-	
-client: $(SHARED_CFILES) $(CLIENT_CFILES)
-	$(GCC) -c $(FLAGS) $(SANITIZER) $(WARNINGS) $(SHARED_LIB) $(SHARED_CFILES) $(CLIENT_CFILES)
-
-client_debug: $(SHARED_CFILES) $(CLIENT_CFILES)
-	$(GCC) -c $(FLAGS) $(SANITIZER) $(WARNINGS) $(SHARED_LIB) $(SHARED_CFILES) $(CLIENT_CFILES)
+da: da.c
+	$(GCC) -o da da.c
 
 clean:
-	rm -r daemon
-	rm -r *.a
-	rm -r *.o
+	rm da
+	rm daemon_runner
+	rm -r daemon_runner.*

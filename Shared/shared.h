@@ -15,27 +15,29 @@
 #endif
 
 /// Settings
-#define DEBUG
 #define SHOW_ERRORS
 #define ALLOWED_PROCESSES 5
 
 /// Signals paths
-#ifdef LINUX
-    #define PID_PATH "/TempData/daemon.pid"
-    #define OUTPUT_PATH "/TempData/daemon_output.txt"
-    #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
-    #define ANALYSIS_PATH "/TempData/analysis_%d"
-    #define STATUS_PATH "/TempData/status_%d"
-    #define LOCK_PATH "/TempData/%d.lock"
+
+#ifdef __APPLE__
+    #define FULL_PATH_PREFIX "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer"
 #else
-    #define PID_PATH "/../TempData/daemon.pid"
-    #define OUTPUT_PATH "/../TempData/daemon_output.txt"
-    #define INSTRUCTION_PATH "/../TempData/daemon_instruction.txt"
-    #define ANALYSIS_PATH "/../TempData/analysis_%d"
-    #define STATUS_PATH "/../TempData/status_%d"
-    #define LOCK_PATH "/../TempData/%d.lock"
+    #ifdef WINDOWS
+        /// Vlad pune aici path-ul tau, e nevoie pentru daemon
+        #define FULL_PATH_PREFIX ""
+    #else
+        /// Stefan pune path-ul tau aici, e nevoie pentru daemon
+        #define FULL_PATH_PREFIX ""
+    #endif
 #endif
 
+
+#define PID_PATH "/TempData/daemon.pid"
+#define OUTPUT_PATH "/TempData/daemon_output.txt"
+#define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
+#define ANALYSIS_PATH "/TempData/analysis_%d"
+#define STATUS_PATH "/TempData/status_%d"
 
 /// Standards
 #define MAX_SUBDIRS 4096
