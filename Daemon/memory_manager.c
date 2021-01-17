@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -52,25 +50,14 @@ void close_shm_ptr(void *shm_ptr, int len) {
 
 int initialize_processes(){
 
-    create_shm_memory("processes", &shm_fd_processes, ALLOWED_PROCESSES);
     create_shm_memory("process_counter", &shm_fd_counter, 1);
     create_shm_memory("task_details", &shm_fd_task_details, sizeof(int));
 
-    for(int i=0;i<ALLOWED_PROCESSES;++i){
-        struct process_details* process = get_process_details(i);
-        if(process==NULL)
-            return errno;
-    }
     int* process_counter = get_process_counter();
     if(process_counter==NULL)
         return errno;
     *process_counter = 0;
     return 0;
-}
-
-struct process_details* get_process_details(int id){
-    void* process = get_shm_ptr("processes", shm_fd_processes, id, getpagesize());
-    return process;
 }
 
 int* get_process_counter(){

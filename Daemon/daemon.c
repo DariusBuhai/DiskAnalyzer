@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <syslog.h>
-
 #include "daemon_flow.h"
-#include "../Shared/shared.h"
 
 int main(){
+
+    #ifndef DEBUG
+        daemon(1, 1);
+    #endif
 
     int error = run_daemon();
     if(error)
