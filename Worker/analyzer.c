@@ -154,7 +154,7 @@ long long output_data(const char*base_path, char unit[], char hashtags[],
     safe_fclose(status_fd, job_id);
   }
 
-  sleep(1);
+  /* sleep(1); */
   return cur_dir_size;
 }
 
