@@ -38,6 +38,7 @@
 #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
 #define ANALYSIS_PATH "/TempData/analysis_%d"
 #define STATUS_PATH "/TempData/status_%d"
+#define LOCK_PATH "/TempData/%d.lock"
 
 /// Standards
 #define MAX_SUBDIRS 4096
