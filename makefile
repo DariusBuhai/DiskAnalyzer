@@ -1,5 +1,5 @@
 GCC=gcc
-FLAGS=-fsanitize=address,undefined,signed-integer-overflow
+FLAGS=-fsanitize=address,undefined,signed-integer-overflow -ldt
 
 DAEMON_CFILES:=$(wildcard Daemon/*.c)
 WORKER_CFILES:=$(wildcard Worker/*.c)
@@ -14,6 +14,14 @@ daemon_release: $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES)
 
 daemon_debug: $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES)
 	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o daemon_runner $(LIB_HFILES) $(FLAGS) -DDEBUG
+
+
+daemon_stef:
+	gcc -g Daemon/*.c Shared/*.c Worker/*.c -lrt -o daemon -IShared -IDaemon -IWorker -pthread -fsanitize=address,undefined,signed-integer-overflow
+
+daemon_stef_debug:
+	gcc -g Daemon/*.c Shared/*.c Worker/*.c -lrt -o daemon -IShared -IDaemon -IWorker -pthread -fsanitize=address,undefined,signed-integer-overflow -DDEBUG
+
 
 da: da.c
 	$(GCC) -o da da.c

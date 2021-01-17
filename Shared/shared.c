@@ -60,7 +60,7 @@ char* get_literal_status(int status) {
 }
 
 char* get_current_path(){
-    char* path = malloc(sizeof(char) * FILENAME_MAX);
+    char* path = calloc(FILENAME_MAX, sizeof(char));
     #ifndef DEBUG
         strcat(path, FULL_PATH_PREFIX);
     #else

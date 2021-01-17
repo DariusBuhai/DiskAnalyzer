@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 #include "daemon_flow.h"
 
@@ -59,8 +60,12 @@ static void skeleton_daemon(){
 
 int main(){
 
+
+    printf("%s", FULL_PATH_PREFIX);
+
     #ifndef DEBUG
-    skeleton_daemon();
+      skeleton_daemon();
+      /* daemon(1, 1); */
     #endif
 
     int error = run_daemon();
