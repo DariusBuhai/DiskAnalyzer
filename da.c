@@ -185,12 +185,24 @@ int main(int argc, char **argv){
     if (is_option(argv[1], "-p", "--print")) {
         if(argc < 3) return -1;
         int pid = atoi(argv[2]);
-        // TODO -e option
         // Send signal instruction
-        char* instructions = malloc(sizeof(char)*1024);
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", PRINT, pid, process_pid);
         send_daemon_instruction(instructions);
         pause();
+        return 0;
+    }
+
+    if (is_option(argv[1], "-h", "--help")) {
+        printf("Usage: da [OPTION]... [DIR]...\n"
+              "Analyze the space occupied by the directory at [DIR]\n"
+              "-a, --add           analyze a new directory path for disk usage\n"
+              "-p, --priority   set priority for the new analysis (works only with -a argument)\n"
+              "-S, --suspend <id>  suspend task with <id>\n"
+              "-R, --resume <id>  resume task with <id>\n"
+              "-r, --remove <id>  remove the analysis with the given <id>\n"
+              "-i, --info <id>  print status about the analysis with <id> (pending, progress, d\n"
+              "-l, --list   list all analysis tasks, with their ID and the corresponding root p\n"
+              "-p, --print <id>  print analysis report for those tasks that are \"done\"\n");
         return 0;
     }
 

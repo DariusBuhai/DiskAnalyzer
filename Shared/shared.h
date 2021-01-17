@@ -26,12 +26,14 @@
     #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
     #define ANALYSIS_PATH "/TempData/analysis_%d"
     #define STATUS_PATH "/TempData/status_%d"
+    #define LOCK_PATH "/TempData/%d.lock"
 #else
     #define PID_PATH "/../TempData/daemon.pid"
     #define OUTPUT_PATH "/../TempData/daemon_output.txt"
     #define INSTRUCTION_PATH "/../TempData/daemon_instruction.txt"
     #define ANALYSIS_PATH "/../TempData/analysis_%d"
     #define STATUS_PATH "/../TempData/status_%d"
+    #define LOCK_PATH "/../TempData/%d.lock"
 #endif
 
 
@@ -88,5 +90,7 @@ char* read_from_file(const char*);
 char* get_literal_priority(int);
 char* get_literal_status(int);
 char* get_current_path();
+FILE* safe_fopen(const char*, const char*, int);
+void safe_fclose(FILE*, int);
 
 #endif //DISKANALYZER_SHARED_H

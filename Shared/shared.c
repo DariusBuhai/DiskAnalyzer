@@ -70,3 +70,23 @@ char* get_current_path(){
     CURRENT_DIR(path, FILENAME_MAX);
     return path;
 }
+
+FILE* safe_fopen(const char* file_name, const char* file_perm, int task_id) {
+  char aux[20];
+  sprintf(aux, LOCK_PATH, task_id);
+  while (access(aux, F_OK) == 0);
+  open(aux, O_WRONLY | O_APPEND | O_CREAT, 0644);
+
+  FILE *out = fopen(file_name, file_perm);
+  return out;
+}
+
+void safe_fclose(FILE *file_name, int task_id) {
+  fclose(file_name);
+
+  char aux[20];
+  sprintf(aux, LOCK_PATH, task_id);
+  if (access(aux, F_OK) == 0) {
+    remove(aux);
+  }
+}
