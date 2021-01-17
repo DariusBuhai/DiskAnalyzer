@@ -20,20 +20,11 @@
 #define ALLOWED_PROCESSES 5
 
 /// Signals paths
-#ifdef LINUX
-    #define PID_PATH "/TempData/daemon.pid"
-    #define OUTPUT_PATH "/TempData/daemon_output.txt"
-    #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
-    #define ANALYSIS_PATH "/TempData/analysis_%d"
-    #define STATUS_PATH "/TempData/status_%d"
-#else
-    #define PID_PATH "/../TempData/daemon.pid"
-    #define OUTPUT_PATH "/../TempData/daemon_output.txt"
-    #define INSTRUCTION_PATH "/../TempData/daemon_instruction.txt"
-    #define ANALYSIS_PATH "/../TempData/analysis_%d"
-    #define STATUS_PATH "/../TempData/status_%d"
-#endif
-
+#define PID_PATH "/TempData/daemon.pid"
+#define OUTPUT_PATH "/TempData/daemon_output.txt"
+#define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
+#define ANALYSIS_PATH "/TempData/analysis_%d"
+#define STATUS_PATH "/TempData/status_%d"
 
 /// Standards
 #define MAX_SUBDIRS 4096
