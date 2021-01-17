@@ -6,28 +6,40 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-// #ifdef WINDOWS
-//     #include <direct.h>
-//     #define CURRENT_DIR _getcwd
-// #else
-//     #include <unistd.h>
-//     #define CURRENT_DIR getcwd
-// #endif
+#ifdef WINDOWS
+    #include <direct.h>
+    #define CURRENT_DIR _getcwd
+#else
+    #include <unistd.h>
+    #define CURRENT_DIR getcwd
+#endif
 
 /// Settings
 #define DEBUG
 #define SHOW_ERRORS
 #define ALLOWED_PROCESSES 5
-#define CHECK_IN_INTERVAL 1 // seconds
+#define CHECK_IN_INTERVAL 1
 
 /// Signals paths
-#define PID_PATH "/TempData/daemon.pid"
-#define OUTPUT_PATH "/TempData/daemon_output.txt"
-#define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
+#ifdef LINUX
+    #define PID_PATH "/TempData/daemon.pid"
+    #define OUTPUT_PATH "/TempData/daemon_output.txt"
+    #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
+    #define ANALYSIS_PATH "/TempData/analysis_%d"
+    #define STATUS_PATH "/TempData/status_%d"
+#else
+    #define PID_PATH "/../TempData/daemon.pid"
+    #define OUTPUT_PATH "/../TempData/daemon_output.txt"
+    #define INSTRUCTION_PATH "/../TempData/daemon_instruction.txt"
+    #define ANALYSIS_PATH "/../TempData/analysis_%d"
+    #define STATUS_PATH "/../TempData/status_%d"
+#endif
+
 
 /// Standards
 #define MAX_SUBDIRS 4096
 #define MAX_PID_SIZE 10
+#define MAX_PATH_LENGTH 1024
 
 #define LL long long
 #define LD long double

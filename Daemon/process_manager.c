@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "process_manager.h"
 #include "memory_manager.h"
@@ -54,7 +52,6 @@ void update_ids() {
       tasks[i].status = details[i];
     }
   }
-  /* close_shm_ptr(details, sizeof(*details) * getpagesize()); */
 }
 
 void take_new_task() {
@@ -172,11 +169,17 @@ int process_signal(struct signal_details signal){
         }
 
         if (signal.type == KILL) {
-            char file_name[50];
-            sprintf(file_name, "data/analysis_%d", signal.pid);
-            remove(file_name);
-            sprintf(file_name, "data/status_%d", signal.pid);
-            remove(file_name);
+
+            char *analysis_path = get_current_path();
+            strcat(analysis_path, ANALYSIS_PATH);
+            sprintf(analysis_path, analysis_path, signal.pid);
+
+            char *status_path = get_current_path();
+            strcat(status_path, STATUS_PATH);
+            sprintf(status_path, status_path, signal.pid);
+
+            remove(analysis_path);
+            remove(status_path);
         }
 
         write_daemon_output(output);
@@ -188,8 +191,12 @@ int process_signal(struct signal_details signal){
          // Determine the process running with that pid
         char output[1024];
         if (signal.pid <= task_cnt && tasks[signal.pid].status != T_REMOVED) {
-          sprintf(output, "data/status_%d", signal.pid);
-          FILE* fd = fopen(output, "r");
+
+            char *status_path = get_current_path();
+            strcat(status_path, STATUS_PATH);
+            sprintf(status_path, status_path, signal.pid);
+
+          FILE* fd = fopen(status_path, "r");
 
           int files, dirs, percentage;
           fscanf(fd, "%d%%\n%d files\n%d dirs",
@@ -213,8 +220,6 @@ int process_signal(struct signal_details signal){
     }
 
     if (signal.type == LIST) {
-        char aux[50];
-        char line[256];
         char output[4096] = "";
         sprintf(output,"ID  PRI  PATH  Done  Status  Details\n");
         int max_len = 4096;
@@ -222,8 +227,11 @@ int process_signal(struct signal_details signal){
         for(int i = 1; i <= task_cnt; ++ i) {
             if (tasks[i].status == T_REMOVED) continue;
 
-            sprintf(aux, "data/status_%d", i);
-            FILE* fd = fopen(aux, "r");
+            char *status_path = get_current_path();
+            strcat(status_path, STATUS_PATH);
+            sprintf(status_path, status_path, i);
+
+            FILE* fd = fopen(status_path, "r");
 
             int files, dirs, percentage;
             fscanf(fd, "%d%%\n%d files\n%d dirs",
@@ -244,11 +252,14 @@ int process_signal(struct signal_details signal){
     }
 
     if (signal.type == PRINT) {
-        char aux[50];
         char output[2048];
         if (tasks[signal.pid].status == T_DONE) {
-            sprintf(aux, "data/analysis_%d", signal.pid);
-            FILE* fd = fopen(aux, "r");
+
+            char *analysis_path = get_current_path();
+            strcat(analysis_path, ANALYSIS_PATH);
+            sprintf(analysis_path, analysis_path, signal.pid);
+
+            FILE* fd = fopen(analysis_path, "r");
         }
 
         write_daemon_output(output);

@@ -9,8 +9,8 @@
 #include <stdlib.h>
 
 #include "analyzer2.h"
+#include "../Shared/shared.h"
 
-const int MAX_PATH_LENGTH = 256;
 int total_rec_count = 0;
 
 int is_dir(const char *path) {
@@ -159,13 +159,19 @@ long long output_data(const char*base_path, char unit[], char hashtags[],
 }
 
 // TODO lockfiles
-
 void analyze(const char* path, int job_id) {
 
-  char output_path[MAX_PATH_LENGTH];
-  char status_path[MAX_PATH_LENGTH];
-  sprintf(output_path, "data/analysis_%d", job_id);
-  sprintf(status_path, "data/status_%d", job_id);
+    char *output_path = malloc(sizeof (char)*MAX_PATH_LENGTH);
+    char *status_path = malloc(sizeof (char)*MAX_PATH_LENGTH);;
+    output_path = get_current_path();
+    status_path = get_current_path();
+
+    strcat(output_path, ANALYSIS_PATH);
+    strcat(status_path, STATUS_PATH);
+
+    sprintf(output_path, output_path, job_id);
+    sprintf(status_path, status_path, job_id);
+
   FILE *fd = fopen(output_path, "w");
   if (fd == NULL) {
     fprintf(stderr, "Path doesn't exist!\n");
