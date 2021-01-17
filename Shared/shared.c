@@ -63,11 +63,10 @@ char* get_literal_status(int status) {
 
 void save_current_path(){
     current_path = calloc(FILENAME_MAX, sizeof(char));
-    CURRENT_DIR(current_path, FILENAME_MAX);
     #ifdef CLION
-        #ifdef DEBUG
-            strcat(current_path, "/..");
-        #endif
+        current_path = "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer";
+    #else
+        CURRENT_DIR(current_path, FILENAME_MAX);
     #endif
 }
 

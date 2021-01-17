@@ -50,7 +50,7 @@ void close_shm_ptr(void *shm_ptr, int len) {
 
 int initialize_processes(){
 
-    create_shm_memory("process_counter", &shm_fd_counter, sizeof (int));
+    create_shm_memory("process_counter", &shm_fd_counter, 1);
     create_shm_memory("task_details", &shm_fd_task_details, sizeof(int));
 
     int* process_counter = get_process_counter();
