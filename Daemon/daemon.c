@@ -60,12 +60,8 @@ static void skeleton_daemon(){
 
 int main(){
 
-
-    printf("%s", FULL_PATH_PREFIX);
-
     #ifndef DEBUG
       skeleton_daemon();
-      /* daemon(1, 1); */
     #endif
 
     int error = run_daemon();
