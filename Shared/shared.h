@@ -43,21 +43,11 @@
 #define LL long long
 #define LD long double
 
-#define HIGH 3
-#define MEDIUM 2
-#define LOW 1
-
-#define T_PENDING 0
-#define T_IN_PROGRESS 1
-#define T_PAUSED 2
-#define T_DONE 3
-#define T_REMOVED 5
-
-#define DONE 1
-#define RUNNING 2
+#define PENDING 1
+#define PROCESSING 2
 #define PAUSED 3
-#define FORCE_PAUSED 4
-#define KILLED 5
+#define DONE 4
+#define REMOVED 5
 
 #define ADD 1
 #define SUSPEND 2
@@ -74,14 +64,6 @@ struct signal_details {
     char* path;
 };
 
-struct process_details {
-    pid_t pid;
-    int priority, status;
-    int done_tasks, total_tasks;
-    struct file_details* response;
-    char *path;
-};
-
 struct file_details {
     char* path;
     int childs_counter, is_dir;
@@ -93,7 +75,7 @@ struct file_details {
 struct task_details {
   int task_id;
   char path[1024];
-  int status; // 0 - pending, 1 - in progress, 2 - paused, 3 - done, 4 - removed
+  int status;
   int priority;
   int worker_pid;
 };

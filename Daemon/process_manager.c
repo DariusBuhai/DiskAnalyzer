@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <errno.h>
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/wait.h>
 
 #include "process_manager.h"
 #include "memory_manager.h"
@@ -34,7 +32,7 @@ void take_new_task() {
     int next_task_id = -1;
     // look for a pending task and start a process for it
     for (int i = 1; i <= task_cnt; ++ i) {
-      if (tasks[i].status != T_PENDING) continue;
+      if (tasks[i].status != PENDING) continue;
       if (next_task_id == -1 || tasks[i].priority > tasks[next_task_id].priority) {
         next_task_id = i;
       }
@@ -57,20 +55,21 @@ void take_new_task() {
     if (pid == 0) {
       int *details = get_task_details();
       int* process_counter = get_process_counter();
-      details[next_task_id] = T_IN_PROGRESS;
+      details[next_task_id] = PROCESSING;
 
       *process_counter += 1;
       printf("%s, %d\n", tasks[next_task_id].path, next_task_id);
+
       analyze(tasks[next_task_id].path, next_task_id);
       *process_counter -= 1;
 
-      details[next_task_id] = T_DONE;
+      details[next_task_id] = DONE;
       close_shm_ptr(details, sizeof(*details) * getpagesize());
       close_shm_ptr(process_counter, sizeof(*process_counter));
       exit(0);
     }
     else {
-      tasks[next_task_id].status = T_IN_PROGRESS;
+      tasks[next_task_id].status = PROCESSING;
       tasks[next_task_id].worker_pid = pid;
     }
 }
@@ -84,13 +83,13 @@ int process_signal(struct signal_details signal){
         // add task to list
         tasks[task_cnt].task_id = task_cnt;
         strcpy(tasks[task_cnt].path, signal.path);
-        tasks[task_cnt].status = T_PENDING;
+        tasks[task_cnt].status = PENDING;
         tasks[task_cnt].priority = signal.priority;
         tasks[task_cnt].worker_pid = -1;
 
         // update task_status in shm
         int* task_details = get_task_details();
-        task_details[task_cnt] =  T_PENDING;
+        task_details[task_cnt] =  PENDING;
         close_shm_ptr(task_details, sizeof(*task_details) * getpagesize());
 
         // Send result back to client, verify eligibility here!
@@ -118,17 +117,17 @@ int process_signal(struct signal_details signal){
             int* task_details = get_task_details();
             if (signal.type == SUSPEND){
                 kill(worker_pid, SIGSTOP);
-                task_details[signal.pid] = T_PAUSED;
+                task_details[signal.pid] = PAUSED;
                 sprintf(output, "Task with ID `%d` suspended", signal.pid);
             }
             else if (signal.type == RESUME){
                 kill(worker_pid, SIGCONT);
-                task_details[signal.pid] = T_IN_PROGRESS;
+                task_details[signal.pid] = PROCESSING;
                 sprintf(output, "Task with ID `%d` resumed", signal.pid);
             }
             else {
                 kill(worker_pid, SIGTERM);
-                task_details[signal.pid] = T_REMOVED;
+                task_details[signal.pid] = REMOVED;
                 sprintf(output, "Removed analysis task with ID `%d` for `%s`",
                     signal.pid, tasks[signal.pid].path);
             }
@@ -160,7 +159,7 @@ int process_signal(struct signal_details signal){
     if (signal.type == INFO){
          // Determine the process running with that pid
         char output[1024];
-        if (signal.pid <= task_cnt && tasks[signal.pid].status != T_REMOVED) {
+        if (signal.pid <= task_cnt && tasks[signal.pid].status != REMOVED) {
 
             char *status_path = get_current_path();
             strcat(status_path, STATUS_PATH);
@@ -195,7 +194,7 @@ int process_signal(struct signal_details signal){
         int max_len = 4096;
 
         for(int i = 1; i <= task_cnt; ++ i) {
-            if (tasks[i].status == T_REMOVED) continue;
+            if (tasks[i].status == REMOVED) continue;
 
             char *status_path = get_current_path();
             strcat(status_path, STATUS_PATH);
@@ -223,7 +222,7 @@ int process_signal(struct signal_details signal){
 
     if (signal.type == PRINT) {
         char output[2048];
-        if (tasks[signal.pid].status == T_DONE) {
+        if (tasks[signal.pid].status == DONE) {
 
             char *analysis_path = get_current_path();
             strcat(analysis_path, ANALYSIS_PATH);

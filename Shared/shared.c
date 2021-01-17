@@ -57,11 +57,11 @@ char* get_literal_priority(int priority){
 }
 
 char* get_literal_status(int status) {
-    if (status == T_PENDING) return "pending";
-    if (status == T_IN_PROGRESS) return "in progress";
-    if (status == T_PAUSED) return "paused";
-    if (status == T_REMOVED) return "killed";
-    if (status == T_DONE) return "done";
+    if (status == PENDING) return "pending";
+    if (status == PROCESSING) return "in progress";
+    if (status == PAUSED) return "paused";
+    if (status == REMOVED) return "killed";
+    if (status == DONE) return "done";
     return "unknown";
 }
 
