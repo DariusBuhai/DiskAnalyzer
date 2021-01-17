@@ -18,7 +18,6 @@
 #define DEBUG
 #define SHOW_ERRORS
 #define ALLOWED_PROCESSES 5
-#define CHECK_IN_INTERVAL 1
 
 /// Signals paths
 #ifdef LINUX

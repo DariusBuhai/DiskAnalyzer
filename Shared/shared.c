@@ -2,8 +2,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <string.h>
-#include <sys/stat.h>
 #include <stdlib.h>
 
 #include "shared.h"

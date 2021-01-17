@@ -9,40 +9,10 @@
 #include "process_manager.h"
 #include "memory_manager.h"
 #include "signal_manager.h"
-#include "../Worker/analyzer2.h"
+#include "../Worker/analyzer.h"
 
 int task_cnt = 0;
 struct task_details tasks[1024];
-
-void check_processes(){
-    int process_counter = *get_process_counter();
-    /// Update processes
-    for(int i=0;i<process_counter;++i)
-        if(get_process_details(i)->status!=DONE){
-            int status;
-            pid_t return_pid = waitpid(get_process_details(i)->pid, &status, WNOHANG);
-            if(return_pid==-1){
-                #ifdef SHOW_ERRORS
-                    perror(NULL);
-                    printf("Process error: %d\n", errno);
-                #endif
-            }else if(return_pid==get_process_details(i)->pid)
-                get_process_details(i)->status = DONE;
-        }
-
-    /// Get highest priority at the moment
-    int highest_priority = LOW;
-    for(int i=0;i<process_counter;++i)
-        if(get_process_details(i)->status==RUNNING && get_process_details(i)->priority>highest_priority)
-            highest_priority = get_process_details(i)->priority;
-    for(int i=0;i<process_counter;++i)
-        if(get_process_details(i)->priority<highest_priority && get_process_details(i)->status==RUNNING){
-            get_process_details(i)->status = PAUSED;
-            kill(get_process_details(i)->pid, SIGSTOP);
-        }
-        else if(get_process_details(i)->status==PAUSED)
-            kill(get_process_details(i)->pid, SIGCONT);
-}
 
 void update_ids() {
   // update task statuses according to the changes made by workers
@@ -265,8 +235,5 @@ int process_signal(struct signal_details signal){
         write_daemon_output(output);
         send_signal(signal.ppid);
     }
-
-    /// Check processes
-    check_processes();
     return 0;
 }
