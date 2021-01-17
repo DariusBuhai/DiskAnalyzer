@@ -28,7 +28,7 @@
         #define FULL_PATH_PREFIX ""
     #else
         /// Stefan pune path-ul tau aici, e nevoie pentru daemon
-        #define FULL_PATH_PREFIX ""
+        #define FULL_PATH_PREFIX "/home/stef/facultate/so/DiskAnalyzer"
     #endif
 #endif
 
