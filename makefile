@@ -1,5 +1,5 @@
 GCC=gcc
-FLAGS=-fsanitize=address,undefined,signed-integer-overflow
+FLAGS=
 
 DAEMON_CFILES:=$(wildcard Daemon/*.c)
 WORKER_CFILES:=$(wildcard Worker/*.c)

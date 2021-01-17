@@ -1,12 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <dirent.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "analyzer.h"
 #include "../Shared/shared.h"
@@ -158,7 +153,6 @@ long long output_data(const char*base_path, char unit[], char hashtags[],
   return cur_dir_size;
 }
 
-// TODO lockfiles
 void analyze(const char* path, int job_id) {
 
     char* output_path = get_current_path();
@@ -170,7 +164,11 @@ void analyze(const char* path, int job_id) {
     sprintf(output_path, output_path, job_id);
     sprintf(status_path, status_path, job_id);
 
+
   FILE *fd = safe_fopen(output_path, "w", job_id);
+    FILE* status_fd = safe_fopen(status_path, "w", job_id);
+    fprintf(status_fd, "%d%%\n%d files\n%d dirs", 0, 0, 0);
+    safe_fclose(status_fd, job_id);
   if (fd == NULL) {
     fprintf(stderr, "Path doesn't exist!\n");
     return;
@@ -203,8 +201,7 @@ void analyze(const char* path, int job_id) {
       path, copy, unit, hashtags);
 
   int file_count = 0, dir_count = 0;
-  output_data(path, unit, hashtags, fd, status_path,
-      &total_size, 1, &file_count, &dir_count, job_id);
+  output_data(path, unit, hashtags, fd, status_path, &total_size, 1, &file_count, &dir_count, job_id);
 
   safe_fclose(fd, job_id);
 }
