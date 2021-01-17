@@ -50,8 +50,8 @@ void close_shm_ptr(void *shm_ptr, int len) {
 
 int initialize_processes(){
 
-    create_shm_memory("process_counter", &shm_fd_counter, sizeof (int));
-    create_shm_memory("task_details", &shm_fd_task_details, sizeof(int));
+    create_shm_memory("process_counter", &shm_fd_counter, 1);
+    create_shm_memory("task_details", &shm_fd_task_details, MAX_PROCESSES);
 
     int* process_counter = get_process_counter();
     if(process_counter==NULL)
@@ -65,7 +65,7 @@ int* get_process_counter(){
     return process_counter;
 }
 
-int* get_task_details() {
-    int* task_details = get_shm_ptr("task_details", shm_fd_task_details, 0, sizeof(int));
+int* get_task_details(int id) {
+    void* task_details = get_shm_ptr("task_details", shm_fd_task_details, id, sizeof(int));
     return task_details;
 }

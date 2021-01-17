@@ -3,7 +3,7 @@
 
 int initialize_processes();
 int* get_process_counter();
-int* get_task_details();
+int* get_task_details(int);
 void close_shm_ptr(void*, int);
 // TODO teardown function
 

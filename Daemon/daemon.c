@@ -5,7 +5,6 @@
 #include <signal.h>
 
 #include "daemon_flow.h"
-#include "../Shared/shared.h"
 
 static void skeleton_daemon(){
     pid_t pid;
@@ -62,6 +61,7 @@ static void skeleton_daemon(){
 int main(){
 
     save_current_path();
+    printf("Current path: %s\n", get_current_path());
 
     #ifndef DEBUG
       skeleton_daemon();

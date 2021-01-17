@@ -25,6 +25,7 @@
 #define LOCK_PATH "/TempData/%d.lock"
 
 /// Standards
+#define MAX_PROCESSES 1000
 #define MAX_SUBDIRS 4096
 #define MAX_PID_SIZE 10
 #define MAX_PATH_LENGTH 1024

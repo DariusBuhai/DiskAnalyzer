@@ -14,11 +14,10 @@ struct task_details tasks[1024];
 
 void update_ids() {
   // update task statuses according to the changes made by workers
-  int *details = get_task_details();
   for (int i = 1; i <= task_cnt; ++ i) {
-    if (details[i] != tasks[i].status) {
-      tasks[i].status = details[i];
-    }
+      int *task_details = get_task_details(i);
+      if(task_details!=NULL)
+          tasks[i].status = *task_details;
   }
 }
 
@@ -53,9 +52,9 @@ void take_new_task() {
     }
 
     if (pid == 0) {
-      int *details = get_task_details();
-      int* process_counter = get_process_counter();
-      details[next_task_id] = PROCESSING;
+      process_counter = get_process_counter();
+      int *task_details = get_task_details(next_task_id);
+      *task_details = PROCESSING;
 
       *process_counter += 1;
       printf("%s, %d\n", tasks[next_task_id].path, next_task_id);
@@ -63,8 +62,8 @@ void take_new_task() {
       analyze(tasks[next_task_id].path, next_task_id);
       *process_counter -= 1;
 
-      details[next_task_id] = DONE;
-      close_shm_ptr(details, sizeof(*details) * getpagesize());
+        *task_details = DONE;
+      close_shm_ptr(task_details, sizeof(*task_details) * getpagesize());
       close_shm_ptr(process_counter, sizeof(*process_counter));
       exit(0);
     }
@@ -100,8 +99,8 @@ int process_signal(struct signal_details signal){
         tasks[task_cnt].worker_pid = -1;
 
         // update task_status in shm
-        int* task_details = get_task_details();
-        task_details[task_cnt] =  PENDING;
+        int* task_details = get_task_details(task_cnt);
+        *task_details =  PENDING;
         close_shm_ptr(task_details, sizeof(*task_details) * getpagesize());
 
         // Send result back to client, verify eligibility here!
@@ -125,20 +124,20 @@ int process_signal(struct signal_details signal){
 
         char output[1024];
         if (worker_pid != -1 && signal.pid <= task_cnt) {
-            int* task_details = get_task_details();
+            int* task_details = get_task_details(signal.pid);
             if (signal.type == SUSPEND){
                 kill(worker_pid, SIGSTOP);
-                task_details[signal.pid] = PAUSED;
+                *task_details = PAUSED;
                 sprintf(output, "Task with ID `%d` suspended", signal.pid);
             }
             else if (signal.type == RESUME){
                 kill(worker_pid, SIGCONT);
-                task_details[signal.pid] = PROCESSING;
+                *task_details = PROCESSING;
                 sprintf(output, "Task with ID `%d` resumed", signal.pid);
             }
             else {
                 kill(worker_pid, SIGTERM);
-                task_details[signal.pid] = REMOVED;
+                *task_details = REMOVED;
                 sprintf(output, "Removed analysis task with ID `%d` for `%s`",
                     signal.pid, tasks[signal.pid].path);
             }
@@ -188,8 +187,7 @@ int process_signal(struct signal_details signal){
           FILE* fd = safe_fopen(status_path, "r", signal.pid);
 
           int files, dirs, percentage;
-          fscanf(fd, "%d%%\n%d files\n%d dirs",
-              &percentage, &files, &dirs);
+          fscanf(fd, "%d%%\n%d files\n%d dirs",&percentage, &files, &dirs);
           safe_fclose(fd, signal.pid);
 
           char pri[] = "***";
@@ -224,8 +222,7 @@ int process_signal(struct signal_details signal){
             FILE* fd = safe_fopen(status_path, "r", i);
 
             int files, dirs, percentage;
-            fscanf(fd, "%d%%\n%d files\n%d dirs",
-                &percentage, &files, &dirs);
+            fscanf(fd, "%d%%\n%d files\n%d dirs", &percentage, &files, &dirs);
             safe_fclose(fd, i);
 
             char pri[] = "***";
