@@ -14,18 +14,16 @@ static struct signal_details* current_signal = NULL;
 void save_daemon_pid(const pid_t pid){
     char *complete_pid_path = get_current_path();
     strcat(complete_pid_path, PID_PATH);
-
+    printf("Saving PID to: %s\n",complete_pid_path );
     char data[MAX_PID_SIZE];
     sprintf(data, "%d", pid);
     write_to_file(complete_pid_path, data);
-    free(complete_pid_path);
 }
 
 void write_daemon_output(char* data){
     char* complete_output_path = get_current_path();
     strcat(complete_output_path, OUTPUT_PATH);
     write_to_file(complete_output_path, data);
-    free(complete_output_path);
 }
 
 struct signal_details* read_daemon_instruction(){

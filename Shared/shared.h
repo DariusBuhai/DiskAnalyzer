@@ -15,11 +15,23 @@
 #endif
 
 /// Settings
-#define DEBUG
 #define SHOW_ERRORS
 #define ALLOWED_PROCESSES 5
 
 /// Signals paths
+#ifdef __APPLE__
+    #define FULL_PATH_PREFIX "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer"
+#else
+    #ifdef WINDOWS
+        /// Vlad pune aici path-ul tau, e nevoie pentru daemon
+        #define FULL_PATH_PREFIX ""
+    #else
+        /// Stefan pune path-ul tau aici, e nevoie pentru daemon
+        #define FULL_PATH_PREFIX ""
+    #endif
+#endif
+
+
 #define PID_PATH "/TempData/daemon.pid"
 #define OUTPUT_PATH "/TempData/daemon_output.txt"
 #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"

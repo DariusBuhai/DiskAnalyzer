@@ -61,9 +61,13 @@ char* get_literal_status(int status) {
 
 char* get_current_path(){
     char* path = malloc(sizeof(char) * FILENAME_MAX);
-    CURRENT_DIR(path, FILENAME_MAX);
-    #ifdef __APPLE__
-        strcat(path, "/..");
+    #ifndef DEBUG
+        strcat(path, FULL_PATH_PREFIX);
+    #else
+        CURRENT_DIR(path, FILENAME_MAX);
+        #ifdef CLION
+            strcat(path, "/..");
+        #endif
     #endif
     return path;
 }
