@@ -15,23 +15,7 @@
 #endif
 
 /// Settings
-#define SHOW_ERRORS
 #define ALLOWED_PROCESSES 5
-
-/// Signals paths
-
-#ifdef __APPLE__
-    #define FULL_PATH_PREFIX "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer"
-#else
-    #ifdef WINDOWS
-        /// Vlad pune aici path-ul tau, e nevoie pentru daemon
-        #define FULL_PATH_PREFIX ""
-    #else
-        /// Stefan pune path-ul tau aici, e nevoie pentru daemon
-        #define FULL_PATH_PREFIX "/home/stef/facultate/so/DiskAnalyzer"
-    #endif
-#endif
-
 
 #define PID_PATH "/TempData/daemon.pid"
 #define OUTPUT_PATH "/TempData/daemon_output.txt"
@@ -91,6 +75,7 @@ void write_to_file(const char*, const char* data);
 char* read_from_file(const char*);
 char* get_literal_priority(int);
 char* get_literal_status(int);
+void save_current_path();
 char* get_current_path();
 FILE* safe_fopen(const char*, const char*, int);
 void safe_fclose(FILE*, int);

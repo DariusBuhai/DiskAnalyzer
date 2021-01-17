@@ -154,17 +154,15 @@ long long output_data(const char*base_path, char unit[], char hashtags[],
     safe_fclose(status_fd, job_id);
   }
 
-  sleep(1);
+  //sleep(1);
   return cur_dir_size;
 }
 
 // TODO lockfiles
 void analyze(const char* path, int job_id) {
 
-    char *output_path = malloc(sizeof (char)*MAX_PATH_LENGTH);
-    char *status_path = malloc(sizeof (char)*MAX_PATH_LENGTH);;
-    output_path = get_current_path();
-    status_path = get_current_path();
+    char* output_path = get_current_path();
+    char* status_path = get_current_path();
 
     strcat(output_path, ANALYSIS_PATH);
     strcat(status_path, STATUS_PATH);

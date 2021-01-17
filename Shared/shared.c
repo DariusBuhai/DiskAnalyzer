@@ -7,6 +7,8 @@
 
 #include "shared.h"
 
+static char* current_path;
+
 int fsize(FILE *fp) {
   fseek(fp, 0, SEEK_END); 
   int size = ftell(fp);
@@ -59,16 +61,19 @@ char* get_literal_status(int status) {
     return "unknown";
 }
 
-char* get_current_path(){
-    char* path = calloc(FILENAME_MAX, sizeof(char));
-    #ifndef DEBUG
-        strcat(path, FULL_PATH_PREFIX);
-    #else
-        CURRENT_DIR(path, FILENAME_MAX);
-        #ifdef CLION
-            strcat(path, "/..");
+void save_current_path(){
+    current_path = calloc(FILENAME_MAX, sizeof(char));
+    CURRENT_DIR(current_path, FILENAME_MAX);
+    #ifdef CLION
+        #ifdef DEBUG
+            strcat(current_path, "/..");
         #endif
     #endif
+}
+
+char* get_current_path(){
+    char* path = calloc(FILENAME_MAX, sizeof(char));
+    strcat(path, current_path);
     return path;
 }
 

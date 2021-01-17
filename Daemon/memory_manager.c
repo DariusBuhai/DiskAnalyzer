@@ -8,7 +8,7 @@
 #include "../Shared/shared.h"
 #include "memory_manager.h"
 
-static int shm_fd_processes, shm_fd_counter, shm_fd_task_details;
+static int shm_fd_counter, shm_fd_task_details;
 
 int create_shm_memory(char shm_name[], int *shm_fd, int size){
     *shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
@@ -50,7 +50,7 @@ void close_shm_ptr(void *shm_ptr, int len) {
 
 int initialize_processes(){
 
-    create_shm_memory("process_counter", &shm_fd_counter, 1);
+    create_shm_memory("process_counter", &shm_fd_counter, sizeof (int));
     create_shm_memory("task_details", &shm_fd_task_details, sizeof(int));
 
     int* process_counter = get_process_counter();
