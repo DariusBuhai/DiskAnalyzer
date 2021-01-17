@@ -147,8 +147,17 @@ int process_signal(struct signal_details signal){
             strcat(status_path, STATUS_PATH);
             sprintf(status_path, status_path, signal.pid);
 
+            char *lock_path = get_current_path();
+            strcat(status_path, LOCK_PATH);
+            sprintf(status_path, status_path, signal.pid);
+
             remove(analysis_path);
             remove(status_path);
+            remove(lock_path);
+
+            free(analysis_path);
+            free(status_path);
+            free(lock_path);
         }
 
         write_daemon_output(output);
@@ -161,16 +170,16 @@ int process_signal(struct signal_details signal){
         char output[1024];
         if (signal.pid <= task_cnt && tasks[signal.pid].status != REMOVED) {
 
-            char *status_path = get_current_path();
-            strcat(status_path, STATUS_PATH);
-            sprintf(status_path, status_path, signal.pid);
+          char *status_path = get_current_path();
+          strcat(status_path, STATUS_PATH);
+          sprintf(status_path, status_path, signal.pid);
 
-          FILE* fd = fopen(status_path, "r");
+          FILE* fd = safe_fopen(status_path, "r", signal.pid);
 
           int files, dirs, percentage;
           fscanf(fd, "%d%%\n%d files\n%d dirs",
               &percentage, &files, &dirs);
-          fclose(fd);
+          safe_fclose(fd, signal.pid);
 
           char pri[] = "***";
           pri[tasks[signal.pid].priority] = '\0';
@@ -179,6 +188,7 @@ int process_signal(struct signal_details signal){
               "%s  %s  %d%%  %s  %d files, %d dirs", 
               signal.pid, pri, tasks[signal.pid].path, percentage,
               get_literal_status(tasks[signal.pid].status), files, dirs);
+          free(status_path);
         }
         else {
             sprintf(output, "Task with ID `%d` does not exist.", signal.pid);
@@ -200,12 +210,12 @@ int process_signal(struct signal_details signal){
             strcat(status_path, STATUS_PATH);
             sprintf(status_path, status_path, i);
 
-            FILE* fd = fopen(status_path, "r");
+            FILE* fd = safe_fopen(status_path, "r", i);
 
             int files, dirs, percentage;
             fscanf(fd, "%d%%\n%d files\n%d dirs",
                 &percentage, &files, &dirs);
-            fclose(fd);
+            safe_fclose(fd, i);
 
             char pri[] = "***";
             pri[tasks[i].priority] = '\0';
@@ -214,6 +224,7 @@ int process_signal(struct signal_details signal){
                 "%d  %s  %s  %d%%  %s  %d files, %d dirs\n", 
                 i, pri, tasks[i].path, percentage,
                 get_literal_status(tasks[i].status), files, dirs);
+            free(status_path);
         }
         write_daemon_output(output);
         send_signal(signal.ppid);
@@ -221,15 +232,33 @@ int process_signal(struct signal_details signal){
     }
 
     if (signal.type == PRINT) {
-        char output[2048];
+        size_t len = 256;
+        char output[4096] = "";
+        char* aux = calloc(256, sizeof(*aux));
         if (tasks[signal.pid].status == DONE) {
 
             char *analysis_path = get_current_path();
             strcat(analysis_path, ANALYSIS_PATH);
             sprintf(analysis_path, analysis_path, signal.pid);
 
-            FILE* fd = fopen(analysis_path, "r");
+            FILE* fd = safe_fopen(analysis_path, "r", signal.pid);
+            if (fd) {
+              while (1) {
+                if (getline(&aux, &len, fd) == -1) break;
+                if (strlen(aux) > 4096 - strlen(output)) break;
+                snprintf(output + strlen(output), 4096 - strlen(output), "%s", aux);
+              }
+            }
+            else {
+              sprintf(output, "No existing analysis for task with ID `%d`", signal.pid);
+            }
+            safe_fclose(fd, signal.pid);
+            free(analysis_path);
         }
+        else {
+          sprintf(output, "No existing analysis for task with ID `%d`", signal.pid);
+        }
+        free(aux);
 
         write_daemon_output(output);
         send_signal(signal.ppid);

@@ -89,7 +89,7 @@ void count_dirs(const char* base_path, long long *total_size) {
 
 long long output_data(const char*base_path, char unit[], char hashtags[],
     FILE *analysis_fd, const char* status_path, long long* total, int first,
-    int *file_count, int *dir_count) {
+    int *file_count, int *dir_count, int job_id) {
 
   DIR *dir = opendir(base_path);
   if (dir == NULL) return 0;
@@ -107,7 +107,7 @@ long long output_data(const char*base_path, char unit[], char hashtags[],
       cur_dir_size += get_file_size(next_path);
       if (is_dir(next_path)) {
         cur_dir_size += output_data(next_path, unit, hashtags, analysis_fd,
-            status_path, total, 0, file_count, dir_count);
+            status_path, total, 0, file_count, dir_count, job_id);
         *dir_count += 1;
       }
       else {
@@ -146,12 +146,12 @@ long long output_data(const char*base_path, char unit[], char hashtags[],
         percentage * 100, copy, unit, hashtags);
   }
 
-  FILE* status_fd = fopen(status_path, "w");
+  FILE* status_fd = safe_fopen(status_path, "w", job_id);
   if (status_fd) {
     percentage = (double) (*file_count + *dir_count) / (double) total_rec_count;
     fprintf(status_fd, "%d%%\n%d files\n%d dirs", 
         (int)(percentage * 100), *file_count, *dir_count);
-    fclose(status_fd);
+    safe_fclose(status_fd, job_id);
   }
 
   sleep(1);
@@ -172,7 +172,7 @@ void analyze(const char* path, int job_id) {
     sprintf(output_path, output_path, job_id);
     sprintf(status_path, status_path, job_id);
 
-  FILE *fd = fopen(output_path, "w");
+  FILE *fd = safe_fopen(output_path, "w", job_id);
   if (fd == NULL) {
     fprintf(stderr, "Path doesn't exist!\n");
     return;
@@ -206,7 +206,7 @@ void analyze(const char* path, int job_id) {
 
   int file_count = 0, dir_count = 0;
   output_data(path, unit, hashtags, fd, status_path,
-      &total_size, 1, &file_count, &dir_count);
+      &total_size, 1, &file_count, &dir_count, job_id);
 
-  fclose(fd);
+  safe_fclose(fd, job_id);
 }

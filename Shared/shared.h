@@ -19,6 +19,7 @@
 #define ALLOWED_PROCESSES 5
 
 /// Signals paths
+
 #ifdef __APPLE__
     #define FULL_PATH_PREFIX "/Users/dariusbuhai/Desktop/Programs/C/DiskAnalyzer"
 #else
@@ -91,5 +92,7 @@ char* read_from_file(const char*);
 char* get_literal_priority(int);
 char* get_literal_status(int);
 char* get_current_path();
+FILE* safe_fopen(const char*, const char*, int);
+void safe_fclose(FILE*, int);
 
 #endif //DISKANALYZER_SHARED_H
