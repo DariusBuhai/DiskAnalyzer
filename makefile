@@ -4,27 +4,36 @@ FLAGS=
 DAEMON_CFILES:=$(wildcard Daemon/*.c)
 WORKER_CFILES:=$(wildcard Worker/*.c)
 SHARED_CFILES:=$(wildcard Shared/*.c)
+
+DA_CFILES:=da.c
+
+DAEMON_OUTPUT:=daemon_runner
+
 LIB_HFILES:=-IShared -IDaemon -IWorker -pthread
+
 
 all: daemon_release da
 debug: daemon_debug da
 
-daemon_release: $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES)
-	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o daemon_runner $(LIB_HFILES) $(FLAGS)
+release_lrt: daemon_release_lrt da
+debug_lrt: daemon_debug_lrt da
 
-daemon_debug: $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES)
-	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o daemon_runner $(LIB_HFILES) $(FLAGS) -DDEBUG
+daemon_release: 
+	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o $(DAEMON_OUTPUT) $(LIB_HFILES) $(FLAGS)
+
+daemon_debug:
+	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -o $(DAEMON_OUTPUT) $(LIB_HFILES) $(FLAGS) -DDEBUG
 
 
-daemon_stef:
-	gcc -g Daemon/*.c Shared/*.c Worker/*.c -lrt -o daemon -IShared -IDaemon -IWorker -pthread -fsanitize=address,undefined,signed-integer-overflow
+daemon_release_lrt:
+	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -lrt -o $(DAEMON_OUTPUT) $(LIB_HFILES) $(FLAGS)
 
-daemon_stef_debug:
-	gcc -g Daemon/*.c Shared/*.c Worker/*.c -lrt -o daemon -IShared -IDaemon -IWorker -pthread -fsanitize=address,undefined,signed-integer-overflow -DDEBUG
+daemon_debug_lrt:
+	$(GCC) -g $(DAEMON_CFILES) $(WORKER_CFILES) $(SHARED_CFILES) -lrt -o $(DAEMON_OUTPUT) $(LIB_HFILES) $(FLAGS) -DDEBUG
 
 
 da: da.c
-	$(GCC) -o da da.c
+	$(GCC) -o da $(DA_CFILES)
 
 clean:
 	rm da
