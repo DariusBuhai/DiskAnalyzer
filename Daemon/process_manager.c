@@ -112,6 +112,10 @@ int process_signal(struct signal_details signal){
         sprintf(status_path, status_path, task_cnt);
         remove(status_path);
 
+        FILE* status_fd = safe_fopen(status_path, "w", signal.pid);
+        fprintf(status_fd, "%d%%\n%d files\n%d dirs", 0, 0, 0);
+        safe_fclose(status_fd, signal.pid);
+
         write_daemon_output(output);
         send_signal(signal.ppid);
         return 0;
