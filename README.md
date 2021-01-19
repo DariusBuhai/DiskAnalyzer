@@ -5,7 +5,7 @@ Daemonul trebuie sa analizeze spatiul ocupat recursiv, pentru fiecare director c
 
 Utilitarul la linia de comanda se va numi ”da” si trebuie sa expuna urmatoarele functionalitati: 
 - [x] Crearea unui job de analiza, pornind de la un director parinte si o prioritate data
-    - [ x prioritatile pot fi de la 1 la 3 si indica ordinea analizei in raport cu celelate joburi (1-low, 2-normal, 3-high)
+    - [x] prioritatile pot fi de la 1 la 3 si indica ordinea analizei in raport cu celelate joburi (1-low, 2-normal, 3-high)
     - [x] un job de analiza pentru un director care este deja parte dintr-un job de analiza, nu trebuie sa creeze task-uri suplimentare
 - [x] Anularea / stergerea unui job de analiza
 - [x] Intreruperea si restartarea (pause/resume) unui job de analiza
