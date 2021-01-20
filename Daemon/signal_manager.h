@@ -3,10 +3,14 @@
 
 #include "../Shared/shared.h"
 
-void init();
-struct signal_details* get_current_signal();
+void initialize_signals();
+
+struct signal_details *get_current_signal();
+
 void reset_current_signal();
+
 int send_signal(pid_t);
-void write_daemon_output(char*);
+
+void write_daemon_output(char *);
 
 #endif //DISKANALYZER_SIGNAL_MANAGER_H

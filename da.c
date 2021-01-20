@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #define ADD 1
 #define SUSPEND 2
@@ -23,32 +24,32 @@ int daemon_pid;
 int process_pid;
 
 int fsize(FILE *fp) {
-  fseek(fp, 0, SEEK_END); 
-  int size = ftell(fp);
-  fseek(fp, 0, SEEK_SET); 
-  return size;
+    fseek(fp, 0, SEEK_END);
+    int size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    return size;
 }
 
-void write_to_file(const char* file_path, const char* data){
-  FILE* fp = fopen(file_path, "w");
-  if (fp == NULL) {
-    fprintf(stderr, "Could not open output file\n");
-    return;
-  }
-
-  fprintf(fp, "%s", data);
-  fclose(fp);
-}
-
-char* read_from_file(const char* file_path){
-    FILE* fp = fopen(file_path, "r");
+void write_to_file(const char *file_path, const char *data) {
+    FILE *fp = fopen(file_path, "w");
     if (fp == NULL) {
-      fprintf(stderr, "Could not open input file\n");
-      return NULL;
+        fprintf(stderr, "Could not open output file\n");
+        return;
+    }
+
+    fprintf(fp, "%s", data);
+    fclose(fp);
+}
+
+char *read_from_file(const char *file_path) {
+    FILE *fp = fopen(file_path, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Could not open input file\n");
+        return NULL;
     }
 
     int file_size = fsize(fp);
-    char* data = malloc(sizeof(char) * file_size);
+    char *data = malloc(sizeof(char) * file_size);
     fread(data, file_size, 1, fp);
     fclose(fp);
 
@@ -56,9 +57,9 @@ char* read_from_file(const char* file_path){
 }
 
 
-pid_t get_daemon_pid(){
+pid_t get_daemon_pid() {
 
-    FILE* fp = fopen(PID_PATH, "r");
+    FILE *fp = fopen(PID_PATH, "r");
     if (fp == NULL) {
         printf("No pid available!\n");
         exit(-1);
@@ -70,16 +71,16 @@ pid_t get_daemon_pid(){
     return atoi(data);
 }
 
-int is_option(const char* option, const char* str1, const char *str2){
+int is_option(const char *option, const char *str1, const char *str2) {
     return strcmp(option, str1) == 0 || strcmp(option, str2) == 0;
 }
 
-void print_daemon_output(int signo){
-    char* data = read_from_file(OUTPUT_PATH);
+void print_daemon_output(int signo) {
+    char *data = read_from_file(OUTPUT_PATH);
     printf("%s\n", data);
 }
 
-void send_daemon_instruction(char* instructions){
+void send_daemon_instruction(char *instructions) {
     write_to_file(INSTRUCTION_PATH, instructions);
     kill(daemon_pid, SIGUSR1);
     sleep(3);
@@ -92,7 +93,7 @@ void init() {
 }
 
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
 
     init();
     if (argc == 1) {
@@ -101,7 +102,8 @@ int main(int argc, char **argv){
     }
 
     char instructions[1024];
-    // Add a new analysis task
+
+    /// Add a new analysis task
     if (is_option(argv[1], "-a", "--add")) {
         if (argc < 3) {
             printf("Not enough arguments provided. Exiting...");
@@ -109,9 +111,8 @@ int main(int argc, char **argv){
         }
 
         int priority = 1;
-        char* path = argv[2];
+        char *path = argv[2];
 
-        // Specified priority
         if (argc == 5 && is_option(argv[3], "-p", "--priority")) {
             priority = atoi(argv[4]);
             if (priority < 1 || priority > 3) {
@@ -120,36 +121,32 @@ int main(int argc, char **argv){
             }
         }
 
-        // Send signal instruction
-        sprintf(instructions, "TYPE %d\nPRIORITY %d\nPATH %s\nPPID %d",
-            ADD, priority, path, process_pid);
+        sprintf(instructions, "TYPE %d\nPRIORITY %d\nPATH %s\nPPID %d", ADD, priority, path, process_pid);
         send_daemon_instruction(instructions);
         return 0;
     }
 
-    // Suspend
+    /// Suspend
     if (is_option(argv[1], "-S", "--suspend")) {
         if (argc < 3) return -1;
         int pid = atoi(argv[2]);
-        // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", SUSPEND, pid, process_pid);
         send_daemon_instruction(instructions);
         return 0;
     }
 
-    // Resume
+    /// Resume
     if (is_option(argv[1], "-R", "--resume")) {
-        if(argc < 3) return -1;
+        if (argc < 3) return -1;
         int pid = atoi(argv[2]);
-        // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", RESUME, pid, process_pid);
         send_daemon_instruction(instructions);
         return 0;
     }
 
-    // Kill
+    /// Kill
     if (is_option(argv[1], "-r", "--remove")) {
-        if(argc < 3) return -1;
+        if (argc < 3) return -1;
         int pid = atoi(argv[2]);
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", KILL, pid, process_pid);
@@ -157,7 +154,7 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    // Info
+    /// Info
     if (is_option(argv[1], "-i", "--info")) {
         if (argc < 3) return -1;
         int pid = atoi(argv[2]);
@@ -167,48 +164,49 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    // List
-    if (is_option(argv[1], "-l", "--list")){
+    /// List
+    if (is_option(argv[1], "-l", "--list")) {
         if (argc < 2) return -1;
-        // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", LIST, 0, process_pid);
         send_daemon_instruction(instructions);
         return 0;
     }
 
-    // Analysis report for tasks that are "done"
+    /// Analysis report for tasks that are "done"
     if (is_option(argv[1], "-p", "--print")) {
-        if(argc < 3) return -1;
+        if (argc < 3) return -1;
         int pid = atoi(argv[2]);
-        // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", PRINT, pid, process_pid);
         send_daemon_instruction(instructions);
         return 0;
     }
 
-    if(is_option(argv[1], "-t", "--terminate")){
+    /// Terminate
+    if (is_option(argv[1], "-t", "--terminate")) {
         pid_t d_pid = get_daemon_pid();
-        kill(d_pid, SIGTERM);
+        if(d_pid!=-1)
+            kill(d_pid, SIGTERM);
         printf("Daemon with PID `%d` terminated\n", d_pid);
         return 0;
     }
 
+    /// Helper
     if (is_option(argv[1], "-h", "--help")) {
         printf("Usage: da [OPTION]... [DIR]...\n"
-              "Analyze the space occupied by the directory at [DIR]\n\n"
-              "-a, --add           analyze a new directory path for disk usage\n"
-              "-p, --priority      set priority for the new analysis (works only with -a argument)\n"
-              "-S, --suspend <id>  suspend task with <id>\n"
-              "-R, --resume <id>   resume task with <id>\n"
-              "-r, --remove <id>   remove the analysis with the given <id>\n"
-              "-i, --info <id>     print status about the analysis with <id> (pending, progress, d\n"
-              "-l, --list          list all analysis tasks, with their ID and the corresponding root p\n"
-              "-p, --print <id>    print analysis report for those tasks that are \"done\"\n"
-              "-t, --terminate     terminates daemon\n\n"
-               );
+               "Analyze the space occupied by the directory at [DIR]\n\n"
+               "-a, --add           analyze a new directory path for disk usage\n"
+               "-p, --priority      set priority for the new analysis (works only with -a argument)\n"
+               "-S, --suspend <id>  suspend task with <id>\n"
+               "-R, --resume <id>   resume task with <id>\n"
+               "-r, --remove <id>   remove the analysis with the given <id>\n"
+               "-i, --info <id>     print status about the analysis with <id> (pending, progress, d\n"
+               "-l, --list          list all analysis tasks, with their ID and the corresponding root p\n"
+               "-p, --print <id>    print analysis report for those tasks that are \"done\"\n"
+               "-t, --terminate     terminates daemon\n\n"
+        );
         return 0;
     }
 
-    printf("Unknown command. Exiting...");
+    printf("Unknown command. Exiting...\n");
     return 0;
 }

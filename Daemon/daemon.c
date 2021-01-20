@@ -6,7 +6,7 @@
 
 #include "daemon_flow.h"
 
-static void skeleton_daemon(){
+static void skeleton_daemon() {
     pid_t pid;
 
     /* Fork off the parent process */
@@ -49,26 +49,24 @@ static void skeleton_daemon(){
 
     /* Close all open file descriptors */
     int x;
-    for (x = sysconf(_SC_OPEN_MAX); x>=0; x--)
-    {
-        close (x);
+    for (x = sysconf(_SC_OPEN_MAX); x >= 0; x--) {
+        close(x);
     }
 
     /* Open the log file */
-    openlog ("firstdaemon", LOG_PID, LOG_DAEMON);
+    openlog("firstdaemon", LOG_PID, LOG_DAEMON);
 }
 
-int main(){
+int main() {
 
     save_current_path();
-    //printf("Current path: %s\n", get_current_path());
 
-    #ifndef DEBUG
-      skeleton_daemon();
-    #endif
+#ifndef DEBUG
+    skeleton_daemon();
+#endif
 
     int error = run_daemon();
-    if(error)
+    if (error)
         printf("Failed to start daemon, error code: %d\n", error);
 
     return EXIT_SUCCESS;
