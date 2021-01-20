@@ -4,8 +4,11 @@
 #include "../Shared/shared.h"
 
 void update_ids();
+
 void take_new_task();
-void check_processes();
+
 int process_signal(struct signal_details);
+
+void end_all_tasks();
 
 #endif //DISKANALYZER_PROCESS_MANAGER_H

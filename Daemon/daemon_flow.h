@@ -3,6 +3,6 @@
 
 #include "../Shared/shared.h"
 
-int run_daemon();
+_Noreturn int run_daemon();
 
 #endif //DISKANALYZER_DAEMON_FLOW_H

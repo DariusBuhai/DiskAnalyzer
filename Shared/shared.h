@@ -17,21 +17,19 @@
 /// Settings
 #define ALLOWED_PROCESSES 5
 
+#define TEMP_DATA_PATH "/TempData/"
 #define PID_PATH "/TempData/daemon.pid"
 #define OUTPUT_PATH "/TempData/daemon_output.txt"
 #define INSTRUCTION_PATH "/TempData/daemon_instruction.txt"
 #define ANALYSIS_PATH "/TempData/analysis_%d"
 #define STATUS_PATH "/TempData/status_%d"
-#define LOCK_PATH "/TempData/%d.lock"
 
 /// Standards
-#define MAX_PROCESSES 1000
-#define MAX_SUBDIRS 4096
+#define MAX_PROCESSES 1024
 #define MAX_PID_SIZE 10
 #define MAX_PATH_LENGTH 1024
 
 #define LL long long
-#define LD long double
 
 #define PENDING 1
 #define PROCESSING 2
@@ -51,36 +49,37 @@
 struct signal_details {
     int type, priority;
     pid_t pid, ppid;
-    char* path;
-};
-
-struct file_details {
-    char* path;
-    int childs_counter, is_dir;
-    double usage;
-    LL size;
-    struct file_details *childs[MAX_SUBDIRS];
+    char *path;
 };
 
 struct task_details {
-  int task_id;
-  char path[1024];
-  int status;
-  int priority;
-  int worker_pid;
+    int task_id;
+    char path[MAX_PATH_LENGTH];
+    int status;
+    int priority;
+    int worker_pid;
 };
 
 /// Methods
 int fsize(FILE *fp);
-void write_to_file(const char*, const char* data);
-char* read_from_file(const char*);
-char* get_literal_priority(int);
-char* get_literal_status(int);
+
+void write_to_file(const char *, const char *data);
+
+char *read_from_file(const char *);
+
+char *get_literal_priority(int);
+
+char *get_literal_status(int);
+
 void save_current_path();
-char* get_current_path();
-FILE* safe_fopen(const char*, const char*, int);
-void safe_fclose(FILE*, int);
-int is_prefix(const char*, const char*);
+
+char *get_current_path();
+
+FILE *safe_fopen(const char *, const char *);
+
+void safe_fclose(FILE *);
+
+int is_prefix(const char *, const char *);
 
 
 #endif //DISKANALYZER_SHARED_H
