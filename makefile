@@ -39,3 +39,10 @@ clean:
 	rm da
 	rm daemon_runner
 	rm -r daemon_runner.*
+	rm -r TempData/*
+
+update:
+	git add .
+	git commit -m "Automated update" .
+	git pull
+	git push
