@@ -82,6 +82,7 @@ void print_daemon_output(int signo){
 void send_daemon_instruction(char* instructions){
     write_to_file(INSTRUCTION_PATH, instructions);
     kill(daemon_pid, SIGUSR1);
+    sleep(3);
 }
 
 void init() {
@@ -123,7 +124,6 @@ int main(int argc, char **argv){
         sprintf(instructions, "TYPE %d\nPRIORITY %d\nPATH %s\nPPID %d",
             ADD, priority, path, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
@@ -134,7 +134,6 @@ int main(int argc, char **argv){
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", SUSPEND, pid, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
@@ -145,7 +144,6 @@ int main(int argc, char **argv){
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", RESUME, pid, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
@@ -156,7 +154,6 @@ int main(int argc, char **argv){
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", KILL, pid, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
@@ -167,7 +164,6 @@ int main(int argc, char **argv){
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", INFO, pid, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
@@ -177,7 +173,6 @@ int main(int argc, char **argv){
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", LIST, 0, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
@@ -188,7 +183,6 @@ int main(int argc, char **argv){
         // Send signal instruction
         sprintf(instructions, "TYPE %d\nPID %d\nPPID %d", PRINT, pid, process_pid);
         send_daemon_instruction(instructions);
-        pause();
         return 0;
     }
 
