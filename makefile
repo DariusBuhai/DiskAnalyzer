@@ -36,10 +36,10 @@ da: da.c
 	$(GCC) -o da $(DA_CFILES)
 
 clean:
+	rm -r TempData/*
 	rm da
 	rm daemon_runner
 	rm -r daemon_runner.*
-	rm -r TempData/*
 
 update:
 	git add .
