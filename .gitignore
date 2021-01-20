@@ -1,0 +1,8 @@
+.idea
+CMakeLists.txt
+cmake-build-debug
+TempData
+daemon_runner.*
+daemon_runner
+daemon_runner.*/
+da
